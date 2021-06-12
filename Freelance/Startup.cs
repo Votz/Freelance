@@ -1,4 +1,5 @@
 using Freelance.Domain.Context;
+using Freelance.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -6,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Configuration;
 
 namespace Freelance.Api
 {
@@ -24,8 +24,7 @@ namespace Freelance.Api
             var connectionString = _configuration.GetConnectionString("ConnectionString");
             services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
 
-            //TODO : Inject Services
-            //services.AddScoped<>;
+            services.AddTransient<IAuthorizationService, AuthorizationService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

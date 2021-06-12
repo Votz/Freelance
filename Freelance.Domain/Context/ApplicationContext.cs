@@ -1,8 +1,10 @@
 ﻿using Freelance.Domain.Entities;
+using Freelance.Shared.Enumerations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Freelance.Domain.Context
@@ -94,5 +96,45 @@ namespace Freelance.Domain.Context
         public DbSet<User> Users { get; set; }
         public DbSet<UserCategory> UserCategories { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
+
+        public override int SaveChanges()
+        {
+            var commonObjectSet = ChangeTracker.Entries<CommonFields>()
+                                               .Where(c => c.State == EntityState.Added || c.State == EntityState.Modified)
+                                               .ToList();
+
+            if (commonObjectSet != null)
+            {
+                foreach (var entry in commonObjectSet)
+                {
+                    switch (entry.State)
+                    {
+                        case EntityState.Added:
+                            entry.Entity.Status = EntityStatus.Active;
+                            entry.Entity.CreateDate = DateTime.Now;
+                            entry.Entity.LastModifyDate = DateTime.Now;
+                            break;
+                        case EntityState.Modified:
+                            entry.Entity.LastModifyDate = DateTime.Now;
+                            break;
+                    }
+                }
+            }
+            int result = base.SaveChanges();
+            return result;
+        }
+
+        public void Commit()
+        {
+            try
+            {
+                this.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                throw ex;
+            }
+        }
     }
 }
