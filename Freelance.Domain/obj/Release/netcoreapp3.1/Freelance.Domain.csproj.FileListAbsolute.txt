@@ -1,0 +1,12 @@
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\bin\Release\netcoreapp3.1\Freelance.Domain.deps.json
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\bin\Release\netcoreapp3.1\Freelance.Domain.runtimeconfig.json
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\bin\Release\netcoreapp3.1\Freelance.Domain.runtimeconfig.dev.json
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\bin\Release\netcoreapp3.1\Freelance.Domain.dll
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\bin\Release\netcoreapp3.1\Freelance.Domain.pdb
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.csprojAssemblyReference.cache
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.AssemblyInfoInputs.cache
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.AssemblyInfo.cs
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.csproj.CoreCompileInputs.cache
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.dll
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.pdb
+E:\sabakalavro\Freelance\Freelance\Freelance.Domain\obj\Release\netcoreapp3.1\Freelance.Domain.genruntimeconfig.cache
