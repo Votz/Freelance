@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Freelance.Services.Interfaces
 {
-    public class BidService
+    public class BidService : IBidService
     {
     }
 }

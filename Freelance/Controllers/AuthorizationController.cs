@@ -22,9 +22,12 @@ namespace Freelance.Api.Controllers
         {
             _authorizationService = authorizationService;
         }
-        public ApiResponse Login(LoginRequest model)
+
+        [HttpPost]
+        public ApiResponse Login([FromBody]LoginRequest model)
         {
-            return _authorizationService.Login(_mapper.Map<LoginRequestModel>(model));
+            var mappedResult = _mapper.Map<LoginRequest, LoginRequestModel>(model);
+            return _authorizationService.Login(mappedResult);
         }
     }
 }

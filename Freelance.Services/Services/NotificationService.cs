@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Freelance.Services.Interfaces
 {
-    public class NotificationService
+    public class NotificationService : INotificationService
     {
     }
 }

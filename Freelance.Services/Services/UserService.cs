@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Freelance.Services.Interfaces
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly UserManager<User> _userManager;
         private readonly ApplicationContext _context;
@@ -18,6 +18,6 @@ namespace Freelance.Services.Interfaces
             _context = context;
         }
 
-        public int Create()
+        //public int Create();
     }
 }
