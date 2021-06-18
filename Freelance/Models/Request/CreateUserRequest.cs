@@ -1,19 +1,18 @@
-﻿using System;
+﻿using Freelance.Shared.Enumerations;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Freelance.Services.Models.Request
+namespace Freelance.Api.Models.Request
 {
-    public class CreateuserModel
+    public class CreateUserRequest
     {
-        
         public string PhoneNumber { get; set; }
-
         public string Email { get; set; }
-
         public string UserName { get; set; }
-
         public string Password { get; set; }
         public string ConfirmPassword { get; set; }
+        public UserType UserType { get; set; }
     }
 }

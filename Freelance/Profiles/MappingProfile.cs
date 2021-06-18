@@ -13,6 +13,13 @@ namespace Freelance.Api.Profiles
         public MappingProfile()
         {
             CreateMap<LoginRequest, LoginRequestModel>();
+            CreateMap<LoginRequest, LoginRequestModel>().ReverseMap();
+
+            CreateMap<CreateUserRequest, CreateuserModel>();
+            CreateMap<CreateUserRequest, CreateuserModel>().ReverseMap();
+
+            CreateMap<CreateRoleRequest, CreateRoleModel>();
+            CreateMap<CreateRoleRequest, CreateRoleModel>().ReverseMap();
         }
         
     }

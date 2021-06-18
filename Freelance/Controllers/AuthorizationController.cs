@@ -2,6 +2,7 @@
 using Freelance.Api.Models.Request;
 using Freelance.Services.Interfaces;
 using Freelance.Services.Models.Request;
+using Freelance.Services.Models.Response;
 using Freelance.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,13 +22,14 @@ namespace Freelance.Api.Controllers
         public AuthorizationController(IAuthorizationService authorizationService, IMapper mapper)
         {
             _authorizationService = authorizationService;
+            _mapper = mapper;
         }
 
         [HttpPost]
-        public ApiResponse Login([FromBody]LoginRequest model)
+        public async Task<ApiResponse<LoginResponseModel>> Login([FromBody]LoginRequest model)
         {
-            var mappedResult = _mapper.Map<LoginRequest, LoginRequestModel>(model);
-            return _authorizationService.Login(mappedResult);
+            var mappedResult = _mapper.Map<LoginRequestModel>(model);
+            return await _authorizationService.Login(mappedResult);
         }
     }
 }

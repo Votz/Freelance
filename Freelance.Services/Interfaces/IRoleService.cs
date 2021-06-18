@@ -1,5 +1,4 @@
 ﻿using Freelance.Services.Models.Request;
-using Freelance.Services.Models.Response;
 using Freelance.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -8,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Freelance.Services.Interfaces
 {
-    public interface IAuthorizationService
+    public interface IRoleService
     {
-        Task<ApiResponse<LoginResponseModel>> Login(LoginRequestModel model);
+        Task<ApiResponse<string>> Create(CreateRoleModel model);
     }
 }

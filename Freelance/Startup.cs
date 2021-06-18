@@ -2,16 +2,15 @@ using AutoMapper;
 using Freelance.Api.Profiles;
 using Freelance.Domain.Context;
 using Freelance.Domain.Entities;
+using Freelance.Services;
 using Freelance.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Localization;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -57,6 +56,7 @@ namespace Freelance.Api
             services.AddTransient<INotificationService, NotificationService>();
             services.AddTransient<IUserCategoryService, UserCategoryService>();
             services.AddTransient<IUserProfileService, UserProfileService>();
+            services.AddTransient<IRoleService, RoleService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<UserManager<User>>();
             services.AddTransient<ISwaggerProvider, SwaggerGenerator>();
@@ -75,7 +75,7 @@ namespace Freelance.Api
                 options.Password.RequiredUniqueChars = 1;
 
                     // Lockout settings.
-                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
 
