@@ -10,5 +10,6 @@ namespace Freelance.Services.Interfaces
     public interface IUserService
     {
         Task<ApiResponse<string>> Create(CreateuserModel model);
+        Task<ApiResponse<bool>> AddUserRole(AddUserInRoleModel model);
     }
 }

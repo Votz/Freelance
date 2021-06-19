@@ -4,6 +4,7 @@ using Freelance.Services.Models.Request;
 using Freelance.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,6 +72,63 @@ namespace Freelance.Services.Interfaces
                 };
             }
 
+        }
+
+        public async Task<ApiResponse<bool>> AddUserRole(AddUserInRoleModel model)
+        {
+            if(string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleId))
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    StatusMessage = "არასწორი ინფორმაცია"
+                };
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == model.UserId);
+            if (user == null)
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    StatusMessage = "აღნიშნული მომხმარებელი არ მოიძებნა სისტემაში"
+                };
+            }
+
+
+            var role = await _context.Roles.FirstOrDefaultAsync(x => x.Id == model.RoleId);
+            if (role == null)
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    StatusMessage = "აღნიშნული უფლება არ მოიძებნა სისტემაში"
+                };
+            }
+
+            var assignResult = await _userManager.AddToRoleAsync(user, role.Name);
+
+            if (assignResult.Succeeded)
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = true
+                };
+            }
+
+            else 
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Model = false,
+                    Errors = new ApiError()
+                    {
+                        ErrorMessages = assignResult.Errors.Select(x => x.Description).ToList()
+                    }
+                };
+            }
         }
     }
 }

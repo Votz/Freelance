@@ -20,6 +20,9 @@ namespace Freelance.Api.Profiles
 
             CreateMap<CreateRoleRequest, CreateRoleModel>();
             CreateMap<CreateRoleRequest, CreateRoleModel>().ReverseMap();
+
+            CreateMap<AddUserInRoleRequest, AddUserInRoleModel>();
+            CreateMap<AddUserInRoleRequest, AddUserInRoleModel>().ReverseMap();
         }
         
     }

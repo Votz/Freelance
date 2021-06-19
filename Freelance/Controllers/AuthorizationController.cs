@@ -31,5 +31,11 @@ namespace Freelance.Api.Controllers
             var mappedResult = _mapper.Map<LoginRequest, LoginRequestModel>(model);
             return await _authorizationService.LogInAsync(mappedResult);
         }
+
+        [HttpGet]
+        public async Task<ApiResponse> Logout([FromHeader]string Authorization)
+        {
+            return await _authorizationService.Logout(Authorization);
+        }
     }
 }

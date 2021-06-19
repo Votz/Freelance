@@ -10,12 +10,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Freelance.Services.Interfaces
@@ -30,15 +28,13 @@ namespace Freelance.Services.Interfaces
         private readonly ILogger<IAuthorizationService> _logger;
         //private IOptions<Shared.Models.TokenOptions> _tokenOptionsConfiguration;
 
-        public AuthorizationService(IConfiguration configuration,UserManager<User> userManager, SignInManager<User> signInManager, ILogger<IAuthorizationService> logger, ApplicationContext context, IStringLocalizer<AuthorizationService> localizer)
+        public AuthorizationService(IConfiguration configuration, UserManager<User> userManager, SignInManager<User> signInManager, ILogger<IAuthorizationService> logger, ApplicationContext context, IStringLocalizer<AuthorizationService> localizer)
         {
             _userManager = userManager;
             _context = context;
             _signInManager = signInManager;
             _logger = logger;
             _configuration = configuration;
-            //_tokenOptionsConfiguration = new Shared.Models.TokenOptions().Create();
-            //_tokenOptionsConfiguration = tokenOptionsConfiguration;
         }
 
         public async Task<ApiResponse<LoginResponseModel>> Login(LoginRequestModel model)
@@ -95,8 +91,7 @@ namespace Freelance.Services.Interfaces
         public async Task<ApiResponse<LoginResponseModel>> LogInAsync(LoginRequestModel model)
         {
             var result = new ApiResponse<LoginResponseModel>();
-            var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, true);
-
+            
             var user = _context.Users.Where(x => x.Email == model.Email).FirstOrDefault();
 
             if (user == null)
@@ -121,16 +116,51 @@ namespace Freelance.Services.Interfaces
                 TokenType = "Bearer"
             };
 
-            result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions);
+            var claims = new List<ClaimNameValue>();
+            if (userRoles.Count() > 0)
+            {
+                claims.Add(
+                    new ClaimNameValue()
+                    {
+                        Key = "UserId",
+                        Value = user.Id
+                    });
 
+                foreach (var role in userRoles)
+                {
+                    claims.Add(
+                        new ClaimNameValue()
+                        {
+                            Key = "UserRole",
+                            Value = role
+                        });
+                }
+            }
+                
+            result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions,claims);
+
+            if (!string.IsNullOrEmpty(result.Model.Token))
+            {
+                _context.UserTokens.Add(new IdentityUserToken<string>()
+                {
+                    UserId = user.Id,
+                    Name = user.UserName,
+                    LoginProvider = "HireHaralo",
+                    Value = result.Model.Token
+                });
+                await _context.SaveChangesAsync();
+                return result;
+            }
+            result.Status = StatusCodes.Status400BadRequest;
+            result.Errors.ErrorMessages.Add("არასწორი ინფორმაცია");
             return result;
         }
 
-        public async Task<ApiResponse<bool>> Logout()
+        public async Task<ApiResponse<bool>> Logout(string authorization)
         {
-            var userToken = GetUserToken();
+            //var userToken = GetUserToken();
 
-            if(userToken == null)
+            if (string.IsNullOrEmpty(authorization))
             {
                 return new ApiResponse<bool>()
                 {
@@ -139,13 +169,22 @@ namespace Freelance.Services.Interfaces
                     Model = false
                 };
             }
-            await _signInManager.SignOutAsync();
-
+            var tokenRecord = await _context.UserTokens.FirstOrDefaultAsync(x => x.Value == authorization);
+            if (tokenRecord == null)
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Model = false
+                };
+            }
+            _context.UserTokens.Remove(tokenRecord);
+            await _context.SaveChangesAsync();
             return new ApiResponse<bool>()
             {
                 Status = StatusCodes.Status200OK,
                 Model = true
-            }; 
+            };
         }
 
         public async Task<ApiResponse<CheckAuthorityResponseModel>> CheckAuthority()
@@ -156,13 +195,13 @@ namespace Freelance.Services.Interfaces
         }
         private string GetUserToken()
         {
-            var authorizationToken = System.Net.HttpRequestHeader.Authorization.ToString();
+            //var authorizationToken = HttpContext.GetTokenAsync("access_token");
 
-            if (string.IsNullOrEmpty(authorizationToken))
-            {
-                return null;
-            }
-            return authorizationToken;
+            //if (string.IsNullOrEmpty(authorizationToken))
+            //{
+            //    return null;
+            //}
+            return null;
         }
     }
 }
