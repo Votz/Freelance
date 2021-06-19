@@ -4,6 +4,7 @@ using Freelance.Domain.Context;
 using Freelance.Domain.Entities;
 using Freelance.Services;
 using Freelance.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
+using System.Text;
 
 namespace Freelance.Api
 {
@@ -28,6 +31,7 @@ namespace Freelance.Api
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+
             services.AddLocalization(options =>
             {
                 options.ResourcesPath = "Resources";
@@ -46,9 +50,12 @@ namespace Freelance.Api
                 mc.AddProfile(new MappingProfile());
             });
 
+            services.AddOptions();
+            
+            services.AddOptions<TokenOptions>().Bind(_configuration.GetSection("TokenOptions"));
+
             IMapper mapper = mapperConfig.CreateMapper();
             services.AddSingleton(mapper);
-
             services.AddTransient<IAuthorizationService, AuthorizationService>();
             services.AddTransient<IBidService, BidService>();
             services.AddTransient<ICategoryService, CategoryService>();
@@ -61,7 +68,6 @@ namespace Freelance.Api
             services.AddTransient<UserManager<User>>();
             services.AddTransient<ISwaggerProvider, SwaggerGenerator>();
             services.AddTransient<ISchemaGenerator, SchemaGenerator>();
-            //services.AddTransient<IApiModelResolver, JsonApiModelResolver>();
 
             //Identity
             services.Configure<IdentityOptions>(options =>
@@ -94,17 +100,28 @@ namespace Freelance.Api
             .AddEntityFrameworkStores<ApplicationContext>()
             .AddDefaultTokenProviders();
 
-            //services.ConfigureApplicationCookie(options =>
-            //{
-            //    // Cookie settings
-            //    options.Cookie.HttpOnly = true;
-            //    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+            services.AddAuthentication(options =>
+            {
+                //options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            //.AddJwtBearer();                
+            .AddJwtBearer(options =>
+            {
+                var tokenOptions = new Shared.Models.TokenOptions();
+                _configuration.GetSection(nameof(TokenOptions)).Bind(tokenOptions);
 
-            //    options.LoginPath = "/Identity/Account/Login";
-            //    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            //    options.SlidingExpiration = true;
-            //});
-
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenOptions.IssuerSigningKey)),
+                };
+            });
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -18,8 +18,7 @@ namespace Freelance.Shared.Models
 
     public class ApiError
     {
-        public string[] ErrorMessages { get; set; }
+        public List<string> ErrorMessages { get; set; }
         public string ExceptionMessage { get; set; }
     }
-
 }

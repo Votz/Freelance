@@ -26,10 +26,10 @@ namespace Freelance.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResponse<LoginResponseModel>> Login([FromBody]LoginRequest model)
+        public async Task<ApiResponse> Login([FromBody] LoginRequest model)
         {
-            var mappedResult = _mapper.Map<LoginRequestModel>(model);
-            return await _authorizationService.Login(mappedResult);
+            var mappedResult = _mapper.Map<LoginRequest, LoginRequestModel>(model);
+            return await _authorizationService.LogInAsync(mappedResult);
         }
     }
 }

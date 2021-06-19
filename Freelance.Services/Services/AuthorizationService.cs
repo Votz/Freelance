@@ -1,12 +1,16 @@
 ﻿using Freelance.Domain.Context;
 using Freelance.Domain.Entities;
+using Freelance.Services.Helpers;
 using Freelance.Services.Models.Request;
 using Freelance.Services.Models.Response;
 using Freelance.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,13 +25,20 @@ namespace Freelance.Services.Interfaces
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly ApplicationContext _context;
+        private readonly IConfiguration _configuration;
         private readonly IStringLocalizer<AuthorizationService> _localizer;
+        private readonly ILogger<IAuthorizationService> _logger;
+        //private IOptions<Shared.Models.TokenOptions> _tokenOptionsConfiguration;
 
-        public AuthorizationService(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationContext context, IStringLocalizer<AuthorizationService> localizer)
+        public AuthorizationService(IConfiguration configuration,UserManager<User> userManager, SignInManager<User> signInManager, ILogger<IAuthorizationService> logger, ApplicationContext context, IStringLocalizer<AuthorizationService> localizer)
         {
             _userManager = userManager;
             _context = context;
             _signInManager = signInManager;
+            _logger = logger;
+            _configuration = configuration;
+            //_tokenOptionsConfiguration = new Shared.Models.TokenOptions().Create();
+            //_tokenOptionsConfiguration = tokenOptionsConfiguration;
         }
 
         public async Task<ApiResponse<LoginResponseModel>> Login(LoginRequestModel model)
@@ -79,6 +90,40 @@ namespace Freelance.Services.Interfaces
                     ExpiryDate = DateTime.Now.AddMinutes(60),
                 }
             };
+        }
+
+        public async Task<ApiResponse<LoginResponseModel>> LogInAsync(LoginRequestModel model)
+        {
+            var result = new ApiResponse<LoginResponseModel>();
+            var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, true);
+
+            var user = _context.Users.Where(x => x.Email == model.Email).FirstOrDefault();
+
+            if (user == null)
+            {
+                result.Status = StatusCodes.Status400BadRequest;
+                result.Errors.ErrorMessages.Add("არასწორი ინფორმაცია");
+                return result;
+            }
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var tokenOptions = new Shared.Models.TokenOptions()
+            {
+                ExpireMinutes = int.Parse(_configuration.GetSection("TokenOptions").GetSection("ExpireMinutes").Value),
+                IssuerSigningKey = _configuration.GetSection("TokenOptions").GetSection("IssuerSigningKey").Value,
+            };
+
+            var expires = DateTime.Now.AddMinutes(tokenOptions.ExpireMinutes);
+            result.Model = new LoginResponseModel
+            {
+                ExpiryDate = expires,
+                TokenType = "Bearer"
+            };
+
+            result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions);
+
+            return result;
         }
 
         public async Task<ApiResponse<bool>> Logout()
