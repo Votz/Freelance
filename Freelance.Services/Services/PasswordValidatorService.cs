@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Freelance.Services.Services
 {
-    public class PasswordValidatorService : IPasswordValidator
+    public class PasswordValidatorService : IPasswordValidatorService
     {
         public PasswordValidatorService(IOptions<IdentityOptions> optionsAccessor)
         {
@@ -18,39 +18,40 @@ namespace Freelance.Services.Services
 
         public IdentityOptions Options { get; set; }
 
-        public virtual List<PasswordValidatorStatus> Validate(string password)
+        public virtual List<string> Validate(string password)
         {
+            var errors = new List<string>();
             if (password == null)
             {
-                throw new ArgumentNullException(nameof(password));
+                errors.Add(PasswordValidatorStatus.PasswordIsRequired.ToString());
+                return errors;
             }
 
-            var errors = new List<PasswordValidatorStatus>();
             var options = Options.Password;
             if (string.IsNullOrWhiteSpace(password) || password.Length < options.RequiredLength)
             {
-                errors.Add(PasswordValidatorStatus.PasswordTooShort);
+                errors.Add(PasswordValidatorStatus.PasswordTooShort.ToString());
             }
 
             if (options.RequireNonAlphanumeric && password.All(IsLetterOrDigit))
             {
-                errors.Add(PasswordValidatorStatus.PasswordRequiresNonAlphanumeric);
+                errors.Add(PasswordValidatorStatus.PasswordRequiresNonAlphanumeric.ToString());
             }
             if (options.RequireDigit && !password.Any(IsDigit))
             {
-                errors.Add(PasswordValidatorStatus.PasswordRequiresDigit);
+                errors.Add(PasswordValidatorStatus.PasswordRequiresDigit.ToString());
             }
             if (options.RequireLowercase && !password.Any(IsLower))
             {
-                errors.Add(PasswordValidatorStatus.PasswordRequiresLower);
+                errors.Add(PasswordValidatorStatus.PasswordRequiresLower.ToString());
             }
             if (options.RequireUppercase && !password.Any(IsUpper))
             {
-                errors.Add(PasswordValidatorStatus.PasswordRequiresUpper);
+                errors.Add(PasswordValidatorStatus.PasswordRequiresUpper.ToString());
             }
             if (options.RequiredUniqueChars >= 1 && password.Distinct().Count() < options.RequiredUniqueChars)
             {
-                errors.Add(PasswordValidatorStatus.PasswordRequiresUniqueChars);
+                errors.Add(PasswordValidatorStatus.PasswordRequiresUniqueChars.ToString());
             }
             return errors;
         }

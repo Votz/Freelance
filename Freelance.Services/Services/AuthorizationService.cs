@@ -10,8 +10,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -21,77 +23,22 @@ namespace Freelance.Services.Interfaces
     public class AuthorizationService : IAuthorizationService
     {
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private readonly ApplicationContext _context;
         private readonly IConfiguration _configuration;
-        private readonly IStringLocalizer<AuthorizationService> _localizer;
-        private readonly ILogger<IAuthorizationService> _logger;
-        //private IOptions<Shared.Models.TokenOptions> _tokenOptionsConfiguration;
+        private readonly IHttpContextAccessor _httpContext;
 
-        public AuthorizationService(IConfiguration configuration, UserManager<User> userManager, SignInManager<User> signInManager, ILogger<IAuthorizationService> logger, ApplicationContext context, IStringLocalizer<AuthorizationService> localizer)
+        public AuthorizationService(IConfiguration configuration, IHttpContextAccessor httpContext, UserManager<User> userManager, ApplicationContext context)
         {
             _userManager = userManager;
             _context = context;
-            _signInManager = signInManager;
-            _logger = logger;
             _configuration = configuration;
+            _httpContext = httpContext;
         }
 
-        public async Task<ApiResponse<LoginResponseModel>> Login(LoginRequestModel model)
-        {
-            var user = await _context.Users.Include(x => x.UserProfile).Where(x => x.Email == model.Email).FirstOrDefaultAsync();
-
-            if (user == null)
-            {
-                return new ApiResponse<LoginResponseModel>()
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    StatusMessage = "არასწორი ლოგინი ან პაროლი"
-                };
-            }
-
-            var hashedPassword = _userManager.PasswordHasher.HashPassword(user, model.Password);
-
-            if (_userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, hashedPassword) != PasswordVerificationResult.Success)
-            {
-
-                user.AccessFailedCount++;
-
-                await _context.SaveChangesAsync();
-                return new ApiResponse<LoginResponseModel>()
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    StatusMessage = "არასწორი ლოგინი ან პაროლი"
-                };
-            }
-
-            var claimedToken = await _userManager.AddClaimAsync(user, new Claim("ActivtationTokenExpiredAt", DateTime.Now.AddHours(1).ToString()));
-            var token = await _userManager.GenerateUserTokenAsync(user, "FreelanceSite", "Authentication");
-            if (string.IsNullOrEmpty(token))
-            {
-                return new ApiResponse<LoginResponseModel>()
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    StatusMessage = "დაფიქსირდა შეცდომა მონაცემების დამუშავებისას"
-                };
-            }
-
-            return new ApiResponse<LoginResponseModel>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = new LoginResponseModel()
-                {
-                    Token = token,
-                    TokenType = "Bearer",
-                    ExpiryDate = DateTime.Now.AddMinutes(60),
-                }
-            };
-        }
-
-        public async Task<ApiResponse<LoginResponseModel>> LogInAsync(LoginRequestModel model)
+        public async Task<ApiResponse<LoginResponseModel>> LogIn(LoginRequestModel model)
         {
             var result = new ApiResponse<LoginResponseModel>();
-            
+
             var user = _context.Users.Where(x => x.Email == model.Email).FirstOrDefault();
 
             if (user == null)
@@ -136,8 +83,8 @@ namespace Freelance.Services.Interfaces
                         });
                 }
             }
-                
-            result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions,claims);
+
+            result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions, claims);
 
             if (!string.IsNullOrEmpty(result.Model.Token))
             {
@@ -156,11 +103,11 @@ namespace Freelance.Services.Interfaces
             return result;
         }
 
-        public async Task<ApiResponse<bool>> Logout(string authorization)
+        public async Task<ApiResponse<bool>> Logout()
         {
-            //var userToken = GetUserToken();
+            var userToken = GetUserToken();
 
-            if (string.IsNullOrEmpty(authorization))
+            if (string.IsNullOrEmpty(userToken))
             {
                 return new ApiResponse<bool>()
                 {
@@ -169,7 +116,7 @@ namespace Freelance.Services.Interfaces
                     Model = false
                 };
             }
-            var tokenRecord = await _context.UserTokens.FirstOrDefaultAsync(x => x.Value == authorization);
+            var tokenRecord = await _context.UserTokens.FirstOrDefaultAsync(x => x.Value == userToken);
             if (tokenRecord == null)
             {
                 return new ApiResponse<bool>()
@@ -189,19 +136,111 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<CheckAuthorityResponseModel>> CheckAuthority()
         {
-            //var userToken = GetUserToken();
-            //var claims = await _userManager.
+            var userToken = GetUserToken();
+
+            if (string.IsNullOrEmpty(userToken))
+            {
+                return new ApiResponse<CheckAuthorityResponseModel>()
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Model = new CheckAuthorityResponseModel()
+                    {
+                        IsAuthorized = false,
+                    }
+                };
+            }
+            else
+            {
+                var tokenRecord = await _context.UserTokens.FirstOrDefaultAsync(x => x.Value == userToken);
+
+                if (tokenRecord == null)
+                {
+                    return new ApiResponse<CheckAuthorityResponseModel>()
+                    {
+                        Status = StatusCodes.Status403Forbidden,
+                        Model = new CheckAuthorityResponseModel()
+                        {
+                            IsAuthorized = false,
+                        }
+                    };
+                }
+
+                var userTokenValidity = GetUserTokenValidity();
+
+                if (!userTokenValidity.IsValid)
+                {
+                    return new ApiResponse<CheckAuthorityResponseModel>()
+                    {
+                        Status = StatusCodes.Status403Forbidden,
+                        Model = new CheckAuthorityResponseModel()
+                        {
+                            IsAuthorized = false,
+                        }
+                    };
+                }
+                if (userTokenValidity.IsValid && userTokenValidity.ValidTo > DateTime.Now)
+                {
+                    var userId = GetUserId();
+                    var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+                    return new ApiResponse<CheckAuthorityResponseModel>()
+                    {
+                        Status = StatusCodes.Status200OK,
+                        Model = new CheckAuthorityResponseModel()
+                        {
+                            IsAuthorized = true,
+                            Username = user.UserName
+                        }
+                    };
+                }
+            }
+            return new ApiResponse<CheckAuthorityResponseModel>()
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Model = new CheckAuthorityResponseModel()
+                {
+                    IsAuthorized = false,
+                }
+            };
+        }
+
+        public string GetUserId()
+        {
+            var getAuthorizationToken = _httpContext.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token);
+            var jwtUserToken = jsonToken as JwtSecurityToken;
+
+            var tokenClaims = jwtUserToken.Claims.ToList();
+
+            if (tokenClaims.Any(x => x.Value == "UserId"))
+            {
+                return tokenClaims.FirstOrDefault(x => x.Value == "UserId").ToString();
+            }
             return null;
         }
-        private string GetUserToken()
-        {
-            //var authorizationToken = HttpContext.GetTokenAsync("access_token");
 
-            //if (string.IsNullOrEmpty(authorizationToken))
-            //{
-            //    return null;
-            //}
-            return null;
+        public string GetUserToken()
+        {
+            var getAuthorizationToken = _httpContext.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
+
+            if (string.IsNullOrEmpty(token))
+                return null;
+            return token;
+        }
+
+        public GetUserTokenValidityModel GetUserTokenValidity()
+        {
+            var getAuthorizationToken = _httpContext.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token);
+            var jwtUserToken = jsonToken as JwtSecurityToken;
+
+            var expires = jwtUserToken.ValidTo;
+            if (DateTime.Now >= expires)
+            {
+                return new GetUserTokenValidityModel();
+            }
+            return new GetUserTokenValidityModel(true, expires);
         }
     }
 }

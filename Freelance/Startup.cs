@@ -4,6 +4,7 @@ using Freelance.Domain.Context;
 using Freelance.Domain.Entities;
 using Freelance.Services;
 using Freelance.Services.Interfaces;
+using Freelance.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -66,6 +67,8 @@ namespace Freelance.Api
             services.AddTransient<IUserProfileService, UserProfileService>();
             services.AddTransient<IRoleService, RoleService>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IPasswordValidatorService, PasswordValidatorService>();
+            services.AddTransient<IPasswordResetService, PasswordResetService>();
             services.AddTransient<UserManager<User>>();
             services.AddTransient<ISwaggerProvider, SwaggerGenerator>();
             services.AddTransient<ISchemaGenerator, SchemaGenerator>();
@@ -73,7 +76,7 @@ namespace Freelance.Api
             services.Configure<PasswordHasherOptions>(options =>
     options.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV2
 );
-
+            services.AddHttpContextAccessor();
             //Identity
             services.Configure<IdentityOptions>(options =>
             {

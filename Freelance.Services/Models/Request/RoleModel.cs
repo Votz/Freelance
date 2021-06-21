@@ -4,8 +4,9 @@ using System.Text;
 
 namespace Freelance.Services.Models.Request
 {
-    public class CreateRoleModel
+    public class RoleModel
     {
+        public string Id { get; set; }
         public string Name { get; set; }
     }
 }

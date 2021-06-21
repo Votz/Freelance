@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,12 +17,17 @@ namespace Freelance.Services.Interfaces
     public class UserService : IUserService
     {
         private readonly UserManager<User> _userManager;
+        private readonly IPasswordValidatorService _validator;
         private readonly ApplicationContext _context;
+        private readonly IAuthorizationService _authorizationService;
 
-        public UserService(UserManager<User> userManager, ApplicationContext context)
+
+        public UserService(IAuthorizationService authorizationService,UserManager<User> userManager, IPasswordValidatorService validator, ApplicationContext context)
         {
             _userManager = userManager;
             _context = context;
+            _validator = validator;
+            _authorizationService = authorizationService;
         }
 
         public async Task<ApiResponse<string>> Create(CreateuserModel model)
@@ -35,10 +41,9 @@ namespace Freelance.Services.Interfaces
                 };
             }
 
-            var passwordValidator = new PasswordValidator<User>();
-            var result = await passwordValidator.ValidateAsync(_userManager, null, model.Password);
+            var passwordValidationErrors = _validator.Validate(model.Password);
 
-            if (result.Succeeded)
+            if (passwordValidationErrors.Count() <= 0)
             {
                 var user = new User()
                 {
@@ -47,7 +52,7 @@ namespace Freelance.Services.Interfaces
                     PhoneNumber = model.PhoneNumber
                 };
 
-                var createdResult = await _userManager.CreateAsync(user,model.ConfirmPassword);
+                var createdResult = await _userManager.CreateAsync(user, model.ConfirmPassword);
 
                 if (createdResult.Succeeded)
                 {
@@ -60,7 +65,7 @@ namespace Freelance.Services.Interfaces
                 return new ApiResponse<string>()
                 {
                     Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "უფლება ვერ შეიქმნა"
+                    StatusMessage = "მომხმარებელი ვერ შეიქმნა"
                 };
             }
             else
@@ -68,7 +73,11 @@ namespace Freelance.Services.Interfaces
                 return new ApiResponse<string>()
                 {
                     Status = StatusCodes.Status400BadRequest,
-                    Model = "არავალიდური პაროლი"
+                    Model = "არავალიდური პაროლი",
+                    Errors = new ApiError()
+                    {
+                        ErrorMessages = passwordValidationErrors
+                    }
                 };
             }
 
@@ -76,7 +85,7 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<bool>> AddUserRole(AddUserInRoleModel model)
         {
-            if(string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleId))
+            if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleId))
             {
                 return new ApiResponse<bool>()
                 {
@@ -117,7 +126,7 @@ namespace Freelance.Services.Interfaces
                 };
             }
 
-            else 
+            else
             {
                 return new ApiResponse<bool>()
                 {
@@ -130,5 +139,6 @@ namespace Freelance.Services.Interfaces
                 };
             }
         }
+
     }
 }

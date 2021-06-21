@@ -2,13 +2,8 @@
 using Freelance.Api.Models.Request;
 using Freelance.Services.Interfaces;
 using Freelance.Services.Models.Request;
-using Freelance.Services.Models.Response;
 using Freelance.Shared.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Freelance.Api.Controllers
@@ -29,13 +24,13 @@ namespace Freelance.Api.Controllers
         public async Task<ApiResponse> Login([FromBody] LoginRequest model)
         {
             var mappedResult = _mapper.Map<LoginRequest, LoginRequestModel>(model);
-            return await _authorizationService.LogInAsync(mappedResult);
+            return await _authorizationService.LogIn(mappedResult);
         }
 
         [HttpGet]
-        public async Task<ApiResponse> Logout([FromHeader]string Authorization)
+        public async Task<ApiResponse> Logout()
         {
-            return await _authorizationService.Logout(Authorization);
+            return await _authorizationService.Logout();
         }
     }
 }

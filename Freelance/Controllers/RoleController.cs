@@ -28,7 +28,7 @@ namespace Freelance.Api.Controllers
         [HttpPost]
         public async Task<ApiResponse<string>> Create([FromBody] CreateRoleRequest model)
         {
-            var mappedResult = _mapper.Map<CreateRoleModel>(model);
+            var mappedResult = _mapper.Map<RoleModel>(model);
             return await _roleService.Create(mappedResult);
         }
     }

@@ -10,7 +10,11 @@ namespace Freelance.Services.Interfaces
 {
     public interface IAuthorizationService
     {
-        Task<ApiResponse<LoginResponseModel>> LogInAsync(LoginRequestModel model);
-        Task<ApiResponse<bool>> Logout(string authorization);
+        Task<ApiResponse<LoginResponseModel>> LogIn(LoginRequestModel model);
+        Task<ApiResponse<bool>> Logout();
+        Task<ApiResponse<CheckAuthorityResponseModel>> CheckAuthority();
+        string GetUserId();
+        string GetUserToken();
+        GetUserTokenValidityModel GetUserTokenValidity();
     }
 }

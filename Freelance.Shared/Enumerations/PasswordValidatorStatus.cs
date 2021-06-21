@@ -11,6 +11,7 @@ namespace Freelance.Shared.Enumerations
         PasswordRequiresDigit,
         PasswordRequiresLower,
         PasswordRequiresUpper,
-        PasswordRequiresUniqueChars
+        PasswordRequiresUniqueChars,
+        PasswordIsRequired
     }
 }

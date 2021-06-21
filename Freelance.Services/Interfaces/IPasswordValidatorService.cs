@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Freelance.Services.Interfaces
 {
-    public interface IPasswordValidator
+    public interface IPasswordValidatorService
     {
         
-        List<PasswordValidatorStatus> Validate(string password);
+        List<string> Validate(string password);
     }
 }

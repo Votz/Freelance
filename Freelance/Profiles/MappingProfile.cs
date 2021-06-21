@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Freelance.Api.Models.Request;
 using Freelance.Services.Models.Request;
+using Freelance.Services.Models.Response;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +20,19 @@ namespace Freelance.Api.Profiles
             CreateMap<CreateUserRequest, CreateuserModel>();
             CreateMap<CreateUserRequest, CreateuserModel>().ReverseMap();
 
-            CreateMap<CreateRoleRequest, CreateRoleModel>();
-            CreateMap<CreateRoleRequest, CreateRoleModel>().ReverseMap();
+            CreateMap<CreateRoleRequest, RoleModel>();
+            CreateMap<CreateRoleRequest, RoleModel>().ReverseMap();
 
             CreateMap<AddUserInRoleRequest, AddUserInRoleModel>();
             CreateMap<AddUserInRoleRequest, AddUserInRoleModel>().ReverseMap();
+
+            CreateMap<IdentityRole, RoleViewModel>();
+            CreateMap<IdentityRole, RoleViewModel>().ReverseMap();
+
+            CreateMap<List<IdentityRole>, List<RoleViewModel>>();
+            CreateMap<List<IdentityRole>, List<RoleViewModel>>().ReverseMap();
+
         }
-        
+
     }
 }

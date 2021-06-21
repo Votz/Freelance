@@ -1,29 +1,42 @@
-﻿using Freelance.Shared.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿using Freelance.Domain.Context;
+using Freelance.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Web.Http.Controllers;
 
 namespace Freelance.Api.Filters
 {
     public class AuthorizeApiAttribute : Attribute,IAuthorizationFilter
     {
         public string Roles { get; set; }
+        
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var getTokenResult = context.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
+            var _context = context.HttpContext.RequestServices.GetRequiredService<ApplicationContext>();
 
+            var getTokenResult = context.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
             var handler = new JwtSecurityTokenHandler();
             var jsonToken = handler.ReadToken(token);
             var tokenS = jsonToken as JwtSecurityToken;
             var expires = tokenS.ValidTo;
+
+            var tokenRecord = _context.UserTokens.FirstOrDefault(x => x.Value == token.FirstOrDefault());
+
+            if(tokenRecord == null)
+            {
+                context.Result = new ObjectResult(new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Model = false
+                });
+                return;
+            }
+
             if(DateTime.Now >= expires)
             {
                 context.Result = new ObjectResult(new ApiResponse<bool>()
