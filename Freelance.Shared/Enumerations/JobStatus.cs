@@ -6,6 +6,7 @@ namespace Freelance.Shared.Enumerations
 {
     public enum JobStatus
     {
+        None = 0,
         Active = 1,
         Delayed = 2,
         InProgress = 3,

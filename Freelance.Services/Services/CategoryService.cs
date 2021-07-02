@@ -28,6 +28,47 @@ namespace Freelance.Services.Interfaces
             _context = context;
             _authorizationService = authorizationService;
         }
+        
+        public async Task<ApiResponse<List<CategoryViewModel>>> GetAll(CategoryModel model)
+        {
+            var categoryList = await _context.Categories.ToListAsync();
+
+            var categoryViewModelList = _mapper.Map<List<CategoryViewModel>>(categoryList);
+
+            if (categoryViewModelList.Count() <= 0)
+            {
+                return new ApiResponse<List<CategoryViewModel>>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Model = null
+                };
+            }
+            return new ApiResponse<List<CategoryViewModel>>()
+            {
+                Status = StatusCodes.Status200OK,
+                Model = categoryViewModelList
+            };
+        }
+
+        public async Task<ApiResponse<CategoryViewModel>> Get(int id)
+        {
+            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (category == null)
+            {
+                return new ApiResponse<CategoryViewModel>()
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Model = null
+                };
+            }
+
+            return new ApiResponse<CategoryViewModel>()
+            {
+                Status = StatusCodes.Status200OK,
+                Model = _mapper.Map<CategoryViewModel>(category)
+            };
+        }
 
         public async Task<ApiResponse<int>> Create(CategoryModel model)
         {
@@ -69,47 +110,6 @@ namespace Freelance.Services.Interfaces
             return new ApiResponse()
             {
                 Status = StatusCodes.Status200OK
-            };
-        }
-
-        public async Task<ApiResponse<CategoryViewModel>> Get(int id)
-        {
-            var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == id);
-
-            if (category == null)
-            {
-                return new ApiResponse<CategoryViewModel>()
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    Model = null
-                };
-            }
-
-            return new ApiResponse<CategoryViewModel>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = _mapper.Map<CategoryViewModel>(category)
-            };
-        }
-
-        public async Task<ApiResponse<List<CategoryViewModel>>> GetAll(CategoryModel model)
-        {
-            var categoryList = await _context.Categories.ToListAsync();
-
-            var categoryViewModelList = _mapper.Map<List<CategoryViewModel>>(categoryList);
-
-            if (categoryViewModelList.Count() <= 0)
-            {
-                return new ApiResponse<List<CategoryViewModel>>()
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    Model = null
-                };
-            }
-            return new ApiResponse<List<CategoryViewModel>>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = categoryViewModelList
             };
         }
 
