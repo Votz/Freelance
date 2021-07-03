@@ -15,10 +15,10 @@ namespace Freelance.Domain.Entities
         public string Education { get; set; }
         public string Languages { get; set; }
         public string UserId { get; set; }
-        public User User { get; set; }
-        public ICollection<Bid> Bids { get; set; }
-        public ICollection<UserCategory> UserCategories { get; set; }
-        public ICollection<Notification> Notifications { get; set; }
+        public virtual User User { get; set; }
+        public virtual ICollection<Bid> Bids { get; set; }
+        public virtual ICollection<UserCategory> UserCategories { get; set; }
+        public virtual ICollection<Notification> Notifications { get; set; }
 
     }
 }

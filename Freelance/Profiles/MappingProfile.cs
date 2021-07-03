@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Freelance.Api.Models.Request;
+using Freelance.Domain.Entities;
 using Freelance.Services.Models.Request;
 using Freelance.Services.Models.Response;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +33,12 @@ namespace Freelance.Api.Profiles
             CreateMap<List<IdentityRole>, List<RoleViewModel>>();
             CreateMap<List<IdentityRole>, List<RoleViewModel>>().ReverseMap();
 
+            CreateMap<JobOffer, JobOfferViewModel>();
+            CreateMap<JobOffer, JobOfferViewModel>().ReverseMap();
+
+            CreateMap<JobOfferViewModel, JobOfferModel>();
+            CreateMap<JobOfferViewModel, JobOfferModel>().ReverseMap();
+            
         }
 
     }

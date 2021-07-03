@@ -1,8 +1,13 @@
-﻿using Freelance.Services.Models.Request;
+﻿using AutoMapper;
+using Freelance.Domain.Context;
+using Freelance.Services.Models.Request;
 using Freelance.Services.Models.Response;
 using Freelance.Shared.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,65 +15,66 @@ namespace Freelance.Services.Interfaces
 {
     public class JobOfferService : IJobOfferService
     {
-        private readonly IBidService _bidService;
+        private readonly IJobOfferService _jobOfferService;
         private readonly ApplicationContext _context;
         private readonly IMapper _mapper;
 
-        public BidService(IBidService bidService, ApplicationContext context, IMapper mapper)
+        public JobOfferService(IJobOfferService jobOfferService, ApplicationContext context, IMapper mapper)
         {
             _bidService = bidService;
             _context = context;
             _mapper = mapper;
         }
 
-        public async Task<ApiResponse<List<BidViewModel>>> GetAll(BidModel model)
+        public async Task<ApiResponse<List<JobOfferViewModel>>> GetAll(JobOfferModel model)
         {
-            var bidList = await _context.Bids.Where(x => (model.JobId == 0 || x.JobId == model.JobId) &&
-                                                         (model.Rate == 0 || x.Rate == model.Rate) &&
-                                                         (model.UserProfileId == 0 || x.UserProfileId == model.UserProfileId)).ToListAsync();
+            var categoryId = model.Categories.Select(x => x.Id).ToList();
+            var jobOfferList = await _context.JobOffers.Where(x => (string.IsNullOrEmpty(model.Name) || x.Name == model.Name) &&
+                                                         (model.JobStatus == 0 || x.JobStatus == model.JobStatus) &&
+                                                         (model.Categories.Count == 0 || x.JobCategories.Any(y => categoryId.Contains(y.Category.Id)))).ToListAsync();
 
-            if (bidList.Count() <= 0)
+            if (jobOfferList.Count() <= 0)
             {
-                return new ApiResponse<List<BidViewModel>>()
+                return new ApiResponse<List<JobOfferViewModel>>()
                 {
                     Status = StatusCodes.Status400BadRequest,
                     StatusMessage = "ჩანაწერები არ მოიძებნა"
                 };
             }
 
-            var bidViewModelList = _mapper.Map<List<BidViewModel>>(bidList);
+            var bidViewModelList = _mapper.Map<List<JobOfferViewModel>>(jobOfferList);
 
-            return new ApiResponse<List<BidViewModel>>()
+            return new ApiResponse<List<JobOfferViewModel>>()
             {
                 Status = StatusCodes.Status200OK,
                 Model = bidViewModelList
             };
         }
 
-        public async Task<ApiResponse<BidViewModel>> Get(int id)
+        public async Task<ApiResponse<JobOfferViewModel>> Get(int id)
         {
-            var bid = await _context.Bids.FirstOrDefaultAsync(x => x.Id == id);
+            var jobOffer = await _context.JobOffers.FirstOrDefaultAsync(x => x.Id == id);
 
-            if (bid == null)
+            if (jobOffer == null)
             {
-                return new ApiResponse<BidViewModel>()
+                return new ApiResponse<JobOfferViewModel>()
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Model = null
                 };
             }
 
-            return new ApiResponse<BidViewModel>()
+            return new ApiResponse<JobOfferViewModel>()
             {
                 Status = StatusCodes.Status200OK,
-                Model = _mapper.Map<BidViewModel>(bid)
+                Model = _mapper.Map<JobOfferViewModel>(jobOffer)
             };
         }
 
-        public async Task<ApiResponse<int>> Create(BidModel model)
+        public async Task<ApiResponse<int>> Create(JobOfferModel model)
         {
-            var bids = await _context.Bids.ToListAsync();
-            if (bids.Any(x => x.UserProfileId == model.UserProfileId && x.JobId == model.JobId))
+            var jobOffers = await _context.JobOffers.ToListAsync();
+            if (jobOffers.Any(x => x.Name == model.Name && x. == model.JobId))
             {
                 return new ApiResponse<int>()
                 {
@@ -88,7 +94,7 @@ namespace Freelance.Services.Interfaces
             };
         }
 
-        public async Task<ApiResponse<int>> Update(BidModel model)
+        public async Task<ApiResponse<int>> Update(JobOfferModel model)
         {
 
             var bids = await _context.Bids.ToListAsync();

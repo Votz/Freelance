@@ -10,8 +10,9 @@ namespace Freelance.Domain.Entities
         public string Name { get; set; }
         public string Description { get; set; }
         public JobStatus JobStatus { get; set; }
-        public ICollection<JobCategory> JobCategories { get; set; }
-        public ICollection<Bid> Bids { get; set; }
-        public ICollection<Notification> Notifications { get; set; }
+        public virtual UserProfile
+        public virtual ICollection<JobCategory> JobCategories { get; set; }
+        public virtual ICollection<Bid> Bids { get; set; }
+        public virtual ICollection<Notification> Notifications { get; set; }
     }
 }
