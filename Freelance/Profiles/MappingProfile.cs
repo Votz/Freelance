@@ -57,15 +57,35 @@ namespace Freelance.Api.Profiles
             CreateMap<CategoryModel, Category>();
             CreateMap<CategoryModel, Category>().ReverseMap();
 
-
             CreateMap<ChangeJobOfferStatus, ChangeJobStatusRequestModel>();
             CreateMap<ChangeJobOfferStatus, ChangeJobStatusRequestModel>().ReverseMap();
 
             CreateMap<BidFilterModel, BidModel>();
             CreateMap<BidFilterModel, BidModel>().ReverseMap();
-
+            
             CreateMap<CreateBidRequest, BidModel>();
             CreateMap<CreateBidRequest, BidModel>().ReverseMap();
+
+            CreateMap<UserProfileFilterModel, UserProfileModel>();
+            CreateMap<UserProfileFilterModel, UserProfileModel>().ReverseMap();
+
+            CreateMap<CreateUserProfileRequestModel, UserProfileModel>();
+            CreateMap<CreateUserProfileRequestModel, UserProfileModel>().ReverseMap();
+
+            CreateMap<UserProfile, UserProfileModel>();
+            CreateMap<UserProfile, UserProfileModel>().ReverseMap();
+
+            CreateMap<EmployerProfileModel, EmployerProfileViewModel>();
+            CreateMap<EmployerProfileModel, EmployerProfileViewModel>().ReverseMap();
+
+            CreateMap<EmployerProfileModel, EmployerProfile>();
+            CreateMap<EmployerProfileModel, EmployerProfile>().ReverseMap();
+
+            CreateMap<EmployerProfileFilterModel, EmployerProfileModel>();
+            CreateMap<EmployerProfileModel, EmployerProfileModel>().ReverseMap();
+
+            CreateMap<CreateEmployerProfileRequestModel, EmployerProfileModel>();
+            CreateMap<CreateEmployerProfileRequestModel, EmployerProfileModel>().ReverseMap();
         }
 
     }

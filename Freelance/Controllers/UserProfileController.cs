@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Freelance.Api.Models.Request;
 using Freelance.Services.Interfaces;
+using Freelance.Services.Models.Request;
 using Freelance.Services.Models.Response;
 using Freelance.Shared.Models;
 using Microsoft.AspNetCore.Http;
@@ -28,34 +30,34 @@ namespace Freelance.Api.Controllers
         [HttpGet("[action]")]
         public async Task<ApiResponse<PaginationResponseModel<UserProfileViewModel>>> GetAll([FromQuery] UserProfileFilterModel model)
         {
-            var mappedResult = _mapper.Map<BidModel>(model);
-            return await _bidService.GetAll(mappedResult);
+            var mappedResult = _mapper.Map<UserProfileModel>(model);
+            return await _userProfileService.GetAll(mappedResult);
         }
 
         [HttpPost("[action]")]
-        public async Task<ApiResponse<int>> Create([FromBody] CreateBidRequest model)
+        public async Task<ApiResponse<int>> Create([FromBody] CreateUserProfileRequestModel model)
         {
-            var mappedResult = _mapper.Map<BidModel>(model);
-            return await _bidService.Create(mappedResult);
+            var mappedResult = _mapper.Map<UserProfileModel>(model);
+            return await _userProfileService.Create(mappedResult);
         }
 
         [HttpPost]
-        public async Task<ApiResponse<int>> Update(BidFilterModel model)
+        public async Task<ApiResponse<int>> Update(CreateUserProfileRequestModel model)
         {
-            var mappedResult = _mapper.Map<BidModel>(model);
-            return await _bidService.Update(mappedResult);
+            var mappedResult = _mapper.Map<UserProfileModel>(model);
+            return await _userProfileService.Update(mappedResult);
         }
 
         [HttpGet]
-        public async Task<ApiResponse<BidViewModel>> Get(int id)
+        public async Task<ApiResponse<UserProfileViewModel>> Get(int id)
         {
-            return await _bidService.Get(id);
+            return await _userProfileService.Get(id);
         }
 
         [HttpGet("[action]")]
         public async Task<ApiResponse> Delete(int id)
         {
-            return await _bidService.Delete(id);
+            return await _userProfileService.Delete(id);
         }
 
     }
