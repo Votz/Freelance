@@ -1,5 +1,6 @@
 ﻿using Freelance.Services.Models.Request;
 using Freelance.Services.Models.Response;
+using Freelance.Shared.Enumerations;
 using Freelance.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,11 @@ namespace Freelance.Services.Interfaces
 {
     public interface IJobOfferService
     {
-        Task<ApiResponse<List<JobOfferViewModel>>> GetAll(JobOfferModel model);
+        Task<ApiResponse<PaginationResponseModel<JobOfferViewModel>>> GetAll(JobOfferModel model);
         Task<ApiResponse<JobOfferViewModel>> Get(int id);
         Task<ApiResponse<int>> Create(JobOfferModel model);
         Task<ApiResponse<int>> Update(JobOfferModel model);
         Task<ApiResponse> Delete(int id);
+        Task<ApiResponse> ChangeJobStatus(ChangeJobOfferStatus model);
     }
 }

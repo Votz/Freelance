@@ -2,13 +2,14 @@
 using Freelance.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Freelance.Services.Models.Request
+namespace Freelance.Api.Models.Request
 {
-    public class RoleModel : PaginationModel
+    public class CategoryFilterRequestModel : PaginationModel
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public EntityStatus Status { get; set; }
     }

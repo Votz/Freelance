@@ -1,12 +1,12 @@
 ﻿using Freelance.Shared.Enumerations;
-using Freelance.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Freelance.Services.Models.Request
+namespace Freelance.Api.Models.Request
 {
-    public class BidModel : PaginationModel
+    public class CreateBidRequest
     {
         public int Id { get; set; }
         public DateTime CreateDate { get; set; }

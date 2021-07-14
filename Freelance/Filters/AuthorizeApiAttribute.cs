@@ -11,57 +11,71 @@ using System.Linq;
 
 namespace Freelance.Api.Filters
 {
-    public class AuthorizeApiAttribute : Attribute,IAuthorizationFilter
+    public class AuthorizeApiAttribute : Attribute, IAuthorizationFilter
     {
         public string Roles { get; set; }
-        
+
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var _context = context.HttpContext.RequestServices.GetRequiredService<ApplicationContext>();
-
-            var getTokenResult = context.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
-            var handler = new JwtSecurityTokenHandler();
-            var jsonToken = handler.ReadToken(token);
-            var tokenS = jsonToken as JwtSecurityToken;
-            var expires = tokenS.ValidTo;
-
-            var tokenRecord = _context.UserTokens.FirstOrDefault(x => x.Value == token.FirstOrDefault());
-
-            if(tokenRecord == null)
+            try
             {
-                context.Result = new ObjectResult(new ApiResponse<bool>()
-                {
-                    Status = StatusCodes.Status403Forbidden,
-                    Model = false
-                });
-                return;
-            }
 
-            if(DateTime.Now >= expires)
-            {
-                context.Result = new ObjectResult(new ApiResponse<bool>()
-                {
-                    Status = StatusCodes.Status403Forbidden,
-                    Model = false
-                });
-                return;
-            }
+                var _context = context.HttpContext.RequestServices.GetRequiredService<ApplicationContext>();
 
-            if (!string.IsNullOrEmpty(Roles))
-            {
-                var tokenClaims = tokenS.Claims.ToList();
-                if(!tokenClaims.Any(x => x.Value == Roles))
+                var getTokenResult = context.HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues token);
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadToken(token);
+                var tokenS = jsonToken as JwtSecurityToken;
+                var expires = tokenS.ValidTo;
+
+                var tokenRecord = _context.UserTokens.FirstOrDefault(x => x.Value == token.FirstOrDefault());
+
+                if (tokenRecord == null)
                 {
                     context.Result = new ObjectResult(new ApiResponse<bool>()
                     {
                         Status = StatusCodes.Status403Forbidden,
-                        Model = false,
-                        StatusMessage = "მომხმარებელს არ აქვს საკმარისი უფლება"
+                        Model = false
                     });
                     return;
                 }
+
+                if (DateTime.Now >= expires)
+                {
+                    context.Result = new ObjectResult(new ApiResponse<bool>()
+                    {
+                        Status = StatusCodes.Status403Forbidden,
+                        Model = false
+                    });
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(Roles))
+                {
+                    var tokenClaims = tokenS.Claims.ToList();
+                    if (!tokenClaims.Any(x => x.Value == Roles))
+                    {
+                        context.Result = new ObjectResult(new ApiResponse<bool>()
+                        {
+                            Status = StatusCodes.Status403Forbidden,
+                            Model = false,
+                            StatusMessage = "მომხმარებელს არ აქვს საკმარისი უფლება"
+                        });
+                        return;
+                    }
+                }
+                return;
             }
-            return;
+            catch
+            {
+                context.Result = new ObjectResult(new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Model = false,
+                    StatusMessage = "მომხმარებელს არ აქვს საკმარისი უფლება"
+                });
+                return;
+            }
         }
     }
 }

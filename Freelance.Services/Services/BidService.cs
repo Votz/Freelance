@@ -16,18 +16,18 @@ namespace Freelance.Services.Interfaces
 {
     public class BidService : IBidService
     {
-        private readonly IBidService _bidService;
         private readonly ApplicationContext _context;
         private readonly IMapper _mapper;
+        private readonly IAuthorizationService _authorizationService;
 
-        public BidService(IBidService bidService, ApplicationContext context, IMapper mapper)
+        public BidService(ApplicationContext context, IMapper mapper, IAuthorizationService authorizationService)
         {
-            _bidService = bidService;
             _context = context;
             _mapper = mapper;
+            _authorizationService = authorizationService;
         }
 
-        public async Task<ApiResponse<List<BidViewModel>>> GetAll(BidModel model)
+        public async Task<ApiResponse<PaginationResponseModel<BidViewModel>>> GetAll(BidModel model)
         {
             var bidList = await _context.Bids.Where(x => (model.JobId == 0 || x.JobId == model.JobId) &&
                                                          (model.Rate == 0 || x.Rate == model.Rate) &&
@@ -35,7 +35,7 @@ namespace Freelance.Services.Interfaces
 
             if(bidList.Count() <= 0)
             {
-                return new ApiResponse<List<BidViewModel>>()
+                return new ApiResponse<PaginationResponseModel<BidViewModel>>()
                 {
                     Status = StatusCodes.Status400BadRequest,
                     StatusMessage = "ჩანაწერები არ მოიძებნა"
@@ -43,11 +43,12 @@ namespace Freelance.Services.Interfaces
             }
 
             var bidViewModelList = _mapper.Map<List<BidViewModel>>(bidList);
-            
-            return new ApiResponse<List<BidViewModel>>()
+            var paginationViewModel = new PaginationResponseModel<BidViewModel>(_context.JobOffers.Count(), bidViewModelList);
+
+            return new ApiResponse<PaginationResponseModel<BidViewModel>>()
             {
                 Status = StatusCodes.Status200OK,
-                Model = bidViewModelList
+                Model = paginationViewModel
             };
         }
 
@@ -79,11 +80,11 @@ namespace Freelance.Services.Interfaces
                 return new ApiResponse<int>()
                 {
                     Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს უკვე არსებობს"
+                    StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს ამ სამსახურზე"
                 };
             }
             var newBid = _mapper.Map<Bid>(model);
-
+            newBid.ModifierId = _authorizationService.GetUserId();
             _context.Bids.Add(newBid);
             await _context.SaveChangesAsync();
 
@@ -119,7 +120,7 @@ namespace Freelance.Services.Interfaces
             }
 
             _mapper.Map(model, bid);
-
+            bid.ModifierId = _authorizationService.GetUserId();
             await _context.SaveChangesAsync();
 
             return new ApiResponse<int>()

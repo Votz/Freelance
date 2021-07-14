@@ -8,5 +8,6 @@ namespace Freelance.Domain.Entities
     public class User : IdentityUser
     {
         public UserProfile UserProfile { get; set; }
+        public EmployerProfile EmployerProfile { get; set; }
     }
 }

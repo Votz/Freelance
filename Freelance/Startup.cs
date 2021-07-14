@@ -46,7 +46,6 @@ namespace Freelance.Api
             });
             var connectionString = _configuration.GetConnectionString("ConnectionString");
             services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
-
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile());
@@ -179,10 +178,12 @@ namespace Freelance.Api
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapDefaultControllerRoute();
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
 
         }
     }

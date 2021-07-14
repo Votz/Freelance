@@ -1,11 +1,13 @@
-﻿using Freelance.Shared.Enumerations;
+﻿using Freelance.Services.Models.Request;
+using Freelance.Shared.Enumerations;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Freelance.Services.Models.Request
+namespace Freelance.Api.Models.Request
 {
-    public class JobOfferModel
+    public class CreateJobOfferRequestModel
     {
         public int Id { get; set; }
         public DateTime CreateDate { get; set; }

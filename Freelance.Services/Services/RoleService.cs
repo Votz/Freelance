@@ -28,7 +28,7 @@ namespace Freelance.Services
             _mapper = mapper;
         }
 
-        public async Task<ApiResponse<List<RoleViewModel>>> GetAll(RoleModel model)
+        public async Task<ApiResponse<PaginationResponseModel<RoleViewModel>>> GetAll(RoleModel model)
         {
             var roleList = await _context.Roles.ToListAsync();
 
@@ -36,16 +36,19 @@ namespace Freelance.Services
 
             if(roleViewModelList.Count() <= 0)
             {
-                return new ApiResponse<List<RoleViewModel>>()
+                return new ApiResponse<PaginationResponseModel<RoleViewModel>>()
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Model = null
                 };
             }
-            return new ApiResponse<List<RoleViewModel>>()
+
+            var paginationViewModel = new PaginationResponseModel<RoleViewModel>(_context.JobOffers.Count(), roleViewModelList);
+
+            return new ApiResponse<PaginationResponseModel<RoleViewModel>>()
             {
                 Status = StatusCodes.Status200OK,
-                Model = roleViewModelList
+                Model = paginationViewModel
             };
         }
 

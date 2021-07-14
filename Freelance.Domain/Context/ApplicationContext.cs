@@ -51,6 +51,10 @@ namespace Freelance.Domain.Context
                 .HasOne(s => s.User) 
                 .WithOne(s => s.UserProfile);
 
+            builder.Entity<EmployerProfile>()
+                .HasOne(s => s.User)
+                .WithOne(s => s.EmployerProfile);
+
             //JobCategory many-to-many
             builder.Entity<UserCategory>()
                .HasKey(b => new { b.UserId, b.CategoryId });
@@ -87,6 +91,11 @@ namespace Freelance.Domain.Context
                 .WithMany(b => b.Notifications)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<JobOffer>()
+                .HasOne(b => b.Employer)
+                .WithMany(b => b.JobOffers)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
         public DbSet<Bid> Bids { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -96,6 +105,7 @@ namespace Freelance.Domain.Context
         public DbSet<User> Users { get; set; }
         public DbSet<UserCategory> UserCategories { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<EmployerProfile> EmployerProfiles { get; set; }
 
         public override int SaveChanges()
         {

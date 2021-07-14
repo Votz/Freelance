@@ -25,7 +25,7 @@ namespace Freelance.Api.Controllers
             _mapper = mapper;
         }
          
-        [AuthorizeApi(Roles = "Employer")]
+        //[AuthorizeApi(Roles = "Employer")]
         [HttpPost]
         public async Task<ApiResponse<string>> Create([FromBody] CreateUserRequest model)
         {

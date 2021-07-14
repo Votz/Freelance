@@ -8,7 +8,7 @@ namespace Freelance.Services.Interfaces
 {
     public interface IBidService
     {
-        Task<ApiResponse<List<BidViewModel>>> GetAll(BidModel model);
+        Task<ApiResponse<PaginationResponseModel<BidViewModel>>> GetAll(BidModel model);
         Task<ApiResponse<BidViewModel>> Get(int id);
         Task<ApiResponse<int>> Create(BidModel model);
         Task<ApiResponse<int>> Update(BidModel model);

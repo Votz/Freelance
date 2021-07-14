@@ -10,7 +10,7 @@ namespace Freelance.Services.Interfaces
 {
     public interface ICategoryService
     {
-        Task<ApiResponse<List<CategoryViewModel>>> GetAll(CategoryModel model);
+        Task<ApiResponse<PaginationResponseModel<CategoryViewModel>>> GetAll(CategoryModel model);
         Task<ApiResponse<CategoryViewModel>> Get(int id);
         Task<ApiResponse<int>> Create(CategoryModel model);
         Task<ApiResponse<int>> Update(CategoryModel model);

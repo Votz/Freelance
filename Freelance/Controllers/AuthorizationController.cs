@@ -20,14 +20,14 @@ namespace Freelance.Api.Controllers
             _mapper = mapper;
         }
 
-        [HttpPost]
+        [HttpPost("[Action]")]
         public async Task<ApiResponse> Login([FromBody] LoginRequest model)
         {
             var mappedResult = _mapper.Map<LoginRequest, LoginRequestModel>(model);
             return await _authorizationService.LogIn(mappedResult);
         }
 
-        [HttpGet]
+        [HttpGet("[Action]")]
         public async Task<ApiResponse> Logout()
         {
             return await _authorizationService.Logout();

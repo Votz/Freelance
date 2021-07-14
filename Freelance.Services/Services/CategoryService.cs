@@ -29,7 +29,7 @@ namespace Freelance.Services.Interfaces
             _authorizationService = authorizationService;
         }
         
-        public async Task<ApiResponse<List<CategoryViewModel>>> GetAll(CategoryModel model)
+        public async Task<ApiResponse<PaginationResponseModel<CategoryViewModel>>> GetAll(CategoryModel model)
         {
             var categoryList = await _context.Categories.ToListAsync();
 
@@ -37,16 +37,19 @@ namespace Freelance.Services.Interfaces
 
             if (categoryViewModelList.Count() <= 0)
             {
-                return new ApiResponse<List<CategoryViewModel>>()
+                return new ApiResponse<PaginationResponseModel<CategoryViewModel>>()
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Model = null
                 };
             }
-            return new ApiResponse<List<CategoryViewModel>>()
+
+            var paginationViewModel = new PaginationResponseModel<CategoryViewModel>(_context.JobOffers.Count(), categoryViewModelList);
+
+            return new ApiResponse<PaginationResponseModel<CategoryViewModel>>()
             {
                 Status = StatusCodes.Status200OK,
-                Model = categoryViewModelList
+                Model = paginationViewModel
             };
         }
 
@@ -82,7 +85,7 @@ namespace Freelance.Services.Interfaces
             }
 
             var newCategory = _mapper.Map<Category>(model);
-
+            newCategory.ModifierId = _authorizationService.GetUserId();
             await _context.Categories.AddAsync(newCategory);
             await _context.SaveChangesAsync();
 
