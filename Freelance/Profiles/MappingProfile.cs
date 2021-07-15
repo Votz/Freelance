@@ -16,76 +16,76 @@ namespace Freelance.Api.Profiles
         public MappingProfile()
         {
             CreateMap<LoginRequest, LoginRequestModel>();
-            CreateMap<LoginRequest, LoginRequestModel>().ReverseMap();
+            CreateMap<LoginRequestModel, LoginRequest>();
 
             CreateMap<CreateUserRequest, CreateuserModel>();
-            CreateMap<CreateUserRequest, CreateuserModel>().ReverseMap();
+            CreateMap<CreateuserModel, CreateUserRequest>().ForAllOtherMembers(opts => opts.Ignore()); ;
 
-            CreateMap<CreateRoleRequest, RoleModel>();
-            CreateMap<CreateRoleRequest, RoleModel>().ReverseMap();
+            CreateMap<CreateRoleRequest, RoleModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<RoleModel, CreateRoleRequest>().ForAllOtherMembers(opts => opts.Ignore()); ;
 
             CreateMap<AddUserInRoleRequest, AddUserInRoleModel>();
-            CreateMap<AddUserInRoleRequest, AddUserInRoleModel>().ReverseMap();
+            CreateMap<AddUserInRoleModel, AddUserInRoleRequest>();
+            
+            CreateMap<RoleFilterModel, RoleModel>();
+            CreateMap<RoleModel, RoleFilterModel>();
 
-            CreateMap<IdentityRole, RoleViewModel>();
-            CreateMap<IdentityRole, RoleViewModel>().ReverseMap();
+            CreateMap<RoleViewModel, IdentityRole>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<IdentityRole, RoleViewModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<List<IdentityRole>, List<RoleViewModel>>();
-            CreateMap<List<IdentityRole>, List<RoleViewModel>>().ReverseMap();
+            //CreateMap<List<IdentityRole>, List<RoleViewModel>>().ForAllOtherMembers(opts => opts.Ignore());
+            //CreateMap<List<RoleViewModel>, List<IdentityRole>>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<JobOffer, JobOfferViewModel>();
-            CreateMap<JobOffer, JobOfferViewModel>().ReverseMap();
+            CreateMap<JobOffer, JobOfferViewModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<JobOfferViewModel, JobOffer>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<JobOfferViewModel, JobOfferModel>();
-            CreateMap<JobOfferViewModel, JobOfferModel>().ReverseMap();
+            CreateMap<JobOfferViewModel, JobOfferModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<JobOfferModel, JobOfferViewModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<JobOfferFilterModel, JobOfferModel>();
-            CreateMap<JobOfferFilterModel, JobOfferModel>().ReverseMap();
+            CreateMap<JobOfferFilterModel, JobOfferModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<JobOfferModel, JobOfferFilterModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<JobOffer, JobOfferModel>();
-            CreateMap<JobOffer, JobOfferModel>().ReverseMap();
+            CreateMap<JobOffer, JobOfferModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<JobOfferModel, JobOffer>().ForAllOtherMembers(opts => opts.Ignore());
 
             CreateMap<CategoryFilterRequestModel, CategoryModel>();
-            CreateMap<CategoryFilterRequestModel, CategoryModel>().ReverseMap();
+            CreateMap<CategoryModel, CategoryFilterRequestModel>();
 
-            CreateMap<CategoryFilterRequestModel, CategoryModel>();
-            CreateMap<CategoryFilterRequestModel, CategoryModel>().ReverseMap();
+            CreateMap<CreateCategoryRequestModel, CategoryModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<CategoryModel, CreateCategoryRequestModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<CreateCategoryRequestModel, CategoryModel>();
-            CreateMap<CreateCategoryRequestModel, CategoryModel>().ReverseMap();
-
-            CreateMap<CategoryModel, Category>();
-            CreateMap<CategoryModel, Category>().ReverseMap();
+            CreateMap<CategoryModel, Category>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<Category, CategoryModel>().ForAllOtherMembers(opts => opts.Ignore());
 
             CreateMap<ChangeJobOfferStatus, ChangeJobStatusRequestModel>();
-            CreateMap<ChangeJobOfferStatus, ChangeJobStatusRequestModel>().ReverseMap();
+            CreateMap<ChangeJobStatusRequestModel, ChangeJobOfferStatus>();
 
             CreateMap<BidFilterModel, BidModel>();
-            CreateMap<BidFilterModel, BidModel>().ReverseMap();
+            CreateMap<BidModel, BidFilterModel>();
             
-            CreateMap<CreateBidRequest, BidModel>();
-            CreateMap<CreateBidRequest, BidModel>().ReverseMap();
+            CreateMap<CreateBidRequest, BidModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<BidModel, CreateBidRequest>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<UserProfileFilterModel, UserProfileModel>();
-            CreateMap<UserProfileFilterModel, UserProfileModel>().ReverseMap();
+            CreateMap<UserProfileFilterModel, UserProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<UserProfileModel, UserProfileFilterModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<CreateUserProfileRequestModel, UserProfileModel>();
-            CreateMap<CreateUserProfileRequestModel, UserProfileModel>().ReverseMap();
+            CreateMap<CreateUserProfileRequestModel, UserProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<UserProfileModel, CreateUserProfileRequestModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<UserProfile, UserProfileModel>();
-            CreateMap<UserProfile, UserProfileModel>().ReverseMap();
+            CreateMap<UserProfile, UserProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<UserProfileModel, UserProfile>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<EmployerProfileModel, EmployerProfileViewModel>();
-            CreateMap<EmployerProfileModel, EmployerProfileViewModel>().ReverseMap();
+            CreateMap<EmployerProfileModel, EmployerProfileViewModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<EmployerProfileViewModel, EmployerProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<EmployerProfileModel, EmployerProfile>();
-            CreateMap<EmployerProfileModel, EmployerProfile>().ReverseMap();
+            CreateMap<EmployerProfileModel, EmployerProfile>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<EmployerProfile, EmployerProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<EmployerProfileFilterModel, EmployerProfileModel>();
-            CreateMap<EmployerProfileModel, EmployerProfileModel>().ReverseMap();
+            CreateMap<EmployerProfileFilterModel, EmployerProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<EmployerProfileModel, EmployerProfileFilterModel>().ForAllOtherMembers(opts => opts.Ignore());
 
-            CreateMap<CreateEmployerProfileRequestModel, EmployerProfileModel>();
-            CreateMap<CreateEmployerProfileRequestModel, EmployerProfileModel>().ReverseMap();
+            CreateMap<CreateEmployerProfileRequestModel, EmployerProfileModel>().ForAllOtherMembers(opts => opts.Ignore());
+            CreateMap<EmployerProfileModel, CreateEmployerProfileRequestModel>().ForAllOtherMembers(opts => opts.Ignore());
         }
 
     }

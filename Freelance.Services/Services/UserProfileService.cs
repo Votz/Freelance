@@ -74,60 +74,78 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<int>> Create(UserProfileModel model)
         {
-            var userProfiles = await _context.UserProfiles.ToListAsync();
-            if (userProfiles.Any(x => x.UserId == model.UserId))
+
+            try
+            {
+                var userProfiles = await _context.UserProfiles.ToListAsync();
+                if (userProfiles.Any(x => x.UserId == model.UserId))
+                {
+                    return new ApiResponse<int>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს ამ სამსახურზე"
+                    };
+                }
+                var newUserProfile = _mapper.Map<UserProfile>(model);
+                newUserProfile.ModifierId = _authorizationService.GetUserId();
+                _context.UserProfiles.Add(newUserProfile);
+                await _context.SaveChangesAsync();
+
+                return new ApiResponse<int>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = newUserProfile.Id
+                };
+            }
+            catch (Exception ex)
             {
                 return new ApiResponse<int>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს ამ სამსახურზე"
+                    Status = StatusCodes.Status500InternalServerError,
+                    Errors = new ApiError()
+                    {
+                        ExceptionMessage = ex.Message
+                    }
                 };
             }
-            var newUserProfile = _mapper.Map<UserProfile>(model);
-            newUserProfile.ModifierId = _authorizationService.GetUserId();
-            _context.UserProfiles.Add(newUserProfile);
-            await _context.SaveChangesAsync();
-
-            return new ApiResponse<int>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = newUserProfile.Id
-            };
         }
 
         public async Task<ApiResponse<int>> Update(UserProfileModel model)
         {
+            try
+            {
+                var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.Id == model.Id);
+                if (userProfile == null)
+                {
+                    return new ApiResponse<int>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "მომხმარებლის პროფილი არ მოიძებნა"
+                    };
+                }
 
-            //var userProfiles = await _context.UserProfiles.ToListAsync();
+                _mapper.Map(model, userProfile);
+                userProfile.ModifierId = _authorizationService.GetUserId();
+                await _context.SaveChangesAsync();
 
-            //if (bids.Any(x => x.UserId == model.UserId && x.Id != model.Id))
-            //{
-            //    return new ApiResponse<int>()
-            //    {
-            //        Status = StatusCodes.Status400BadRequest,
-            //        StatusMessage = "მომხმარებლის პროფილი უკვე მომხმარებელს უკვე გაკეთებული აქვს"
-            //    };
-            //}
+                return new ApiResponse<int>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = userProfile.Id
+                };
 
-            var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.Id == model.Id);
-            if (userProfile == null)
+            }
+            catch (Exception ex)
             {
                 return new ApiResponse<int>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "მომხმარებლის პროფილი არ მოიძებნა"
+                    Status = StatusCodes.Status500InternalServerError,
+                    Errors = new ApiError()
+                    {
+                        ExceptionMessage = ex.Message
+                    }
                 };
             }
-
-            _mapper.Map(model, userProfile);
-            userProfile.ModifierId = _authorizationService.GetUserId();
-            await _context.SaveChangesAsync();
-
-            return new ApiResponse<int>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = userProfile.Id
-            };
         }
 
         public async Task<ApiResponse> Delete(int id)

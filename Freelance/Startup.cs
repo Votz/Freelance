@@ -34,6 +34,8 @@ namespace Freelance.Api
         public void ConfigureServices(IServiceCollection services)
         {
 
+
+
             services.AddLocalization(options =>
             {
                 options.ResourcesPath = "Resources";
@@ -49,10 +51,13 @@ namespace Freelance.Api
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile());
-            });
 
+            });
+            //mapperConfig.AssertConfigurationIsValid();
+            services.AddCors();
+            services.AddMvc();
             services.AddOptions();
-            
+
             services.AddOptions<TokenOptions>().Bind(_configuration.GetSection("TokenOptions"));
 
             IMapper mapper = mapperConfig.CreateMapper();
@@ -79,26 +84,26 @@ namespace Freelance.Api
             //Identity
             services.Configure<IdentityOptions>(options =>
             {
-                    // Password settings.
-                    options.Password.RequireDigit = true;
+                // Password settings.
+                options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequireUppercase = true;
                 options.Password.RequiredLength = 8;
                 options.Password.RequiredUniqueChars = 1;
 
-                    // Lockout settings.
-                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
+                // Lockout settings.
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
 
-                    // User settings.
-                    options.User.AllowedUserNameCharacters =
-                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+";
+                // User settings.
+                options.User.AllowedUserNameCharacters =
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+";
                 options.User.RequireUniqueEmail = true;
             });
 
-            services.AddMvc();
+            
             services.AddSwaggerGen(swagger =>
             {
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
@@ -153,7 +158,7 @@ namespace Freelance.Api
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenOptions.IssuerSigningKey)),
                 };
             });
-            
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -163,6 +168,12 @@ namespace Freelance.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true) // allow any origin
+                .AllowCredentials());
+            app.UseRouting();
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>
@@ -171,8 +182,6 @@ namespace Freelance.Api
                 c.RoutePrefix = string.Empty;
             });
             app.UseRequestLocalization();
-            app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
 

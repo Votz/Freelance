@@ -7,6 +7,7 @@ namespace Freelance.Api.Models.Request
 {
     public class CreateRoleRequest
     {
+        public string Id { get; set; }
         public string Name { get; set; }
     }
 }

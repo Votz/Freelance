@@ -31,8 +31,12 @@ namespace Freelance.Services
         public async Task<ApiResponse<PaginationResponseModel<RoleViewModel>>> GetAll(RoleModel model)
         {
             var roleList = await _context.Roles.ToListAsync();
-
-            var roleViewModelList = _mapper.Map<List<RoleViewModel>>(roleList);
+            var roleViewModelList = roleList.Select(x => new RoleViewModel() 
+            {
+                Id = x.Id,
+                Name = x.Name
+            }).ToList();
+            
 
             if(roleViewModelList.Count() <= 0)
             {
@@ -43,7 +47,7 @@ namespace Freelance.Services
                 };
             }
 
-            var paginationViewModel = new PaginationResponseModel<RoleViewModel>(_context.JobOffers.Count(), roleViewModelList);
+            var paginationViewModel = new PaginationResponseModel<RoleViewModel>(roleList.Count(), roleViewModelList);
 
             return new ApiResponse<PaginationResponseModel<RoleViewModel>>()
             {

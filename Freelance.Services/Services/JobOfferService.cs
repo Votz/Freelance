@@ -30,10 +30,11 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<PaginationResponseModel<JobOfferViewModel>>> GetAll(JobOfferModel model)
         {
-            var categoryId = model.Categories.Select(x => x.Id).ToList();
+            //var categoryId = model.Categories.Select(x => x.Id).ToList();
             var jobOfferList = await _context.JobOffers.Where(x => (string.IsNullOrEmpty(model.Name) || x.Name == model.Name) &&
-                                                         (model.JobStatus == 0 || x.JobStatus == model.JobStatus) &&
-                                                         (model.Categories.Count == 0 || x.JobCategories.Any(y => categoryId.Contains(y.Category.Id)))).ToListAsync();
+                                                         (model.JobStatus == 0 || x.JobStatus == model.JobStatus)).ToListAsync();
+                                                         //&&
+                                                         //(model.Categories.Count == 0 || x.JobCategories.Any(y => categoryId.Contains(y.Category.Id)))).ToListAsync();
 
             if (jobOfferList.Count() <= 0)
             {
@@ -44,7 +45,14 @@ namespace Freelance.Services.Interfaces
                 };
             }
 
-            var jobOfferModelList = _mapper.Map<List<JobOfferViewModel>>(jobOfferList);
+            var jobOfferModelList = jobOfferList.Select(x => new JobOfferViewModel()
+            {
+                Id = x.Id,
+                CreateDate = x.CreateDate,
+                JobStatus = x.JobStatus,
+                Description = x.Description,
+                Name = x.Name,
+            }).ToList();
             var paginationViewModel = new PaginationResponseModel<JobOfferViewModel>(_context.JobOffers.Count(), jobOfferModelList);
 
             return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()

@@ -37,6 +37,10 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<LoginResponseModel>> LogIn(LoginRequestModel model)
         {
+            try
+            {
+
+            
             var result = new ApiResponse<LoginResponseModel>();
 
             var user = _context.Users.Where(x => x.Email == model.Email).FirstOrDefault();
@@ -44,7 +48,6 @@ namespace Freelance.Services.Interfaces
             if (user == null)
             {
                 result.Status = StatusCodes.Status400BadRequest;
-                result.Errors.ErrorMessages.Add("არასწორი ინფორმაცია");
                 return result;
             }
 
@@ -88,19 +91,44 @@ namespace Freelance.Services.Interfaces
 
             if (!string.IsNullOrEmpty(result.Model.Token))
             {
-                _context.UserTokens.Add(new IdentityUserToken<string>()
+                var userTokens = _context.UserTokens.ToList();
+                if (!userTokens.Any(x => x.UserId == user.Id && x.Name == user.UserName))
                 {
-                    UserId = user.Id,
-                    Name = user.UserName,
-                    LoginProvider = "HireHaralo",
-                    Value = result.Model.Token
-                });
-                await _context.SaveChangesAsync();
+
+                    _context.UserTokens.Add(new IdentityUserToken<string>()
+                    {
+                        UserId = user.Id,
+                        Name = user.UserName,
+                        LoginProvider = "HireHaralo",
+                        Value = result.Model.Token
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    var userTokenRecord = userTokens.FirstOrDefault(x => x.UserId == user.Id && x.Name == user.UserName);
+                    _context.Remove(userTokenRecord);
+                    _context.UserTokens.Add(new IdentityUserToken<string>()
+                    {
+                        UserId = user.Id,
+                        Name = user.UserName,
+                        LoginProvider = "HireHaralo",
+                        Value = result.Model.Token
+                    });
+                    _context.SaveChanges();
+                }
                 return result;
             }
             result.Status = StatusCodes.Status400BadRequest;
-            result.Errors.ErrorMessages.Add("არასწორი ინფორმაცია");
             return result;
+            }
+            catch
+            {
+                var result = new ApiResponse<LoginResponseModel>();
+                result.Status = StatusCodes.Status400BadRequest;
+                return result;
+
+            }
         }
 
         public async Task<ApiResponse<bool>> Logout()
