@@ -39,88 +39,91 @@ namespace Freelance.Services.Interfaces
         {
             try
             {
+                var result = new ApiResponse<LoginResponseModel>();
 
-            
-            var result = new ApiResponse<LoginResponseModel>();
+                var user = _context.Users.Where(x => x.Email == model.Email).FirstOrDefault();
 
-            var user = _context.Users.Where(x => x.Email == model.Email).FirstOrDefault();
-
-            if (user == null)
-            {
-                result.Status = StatusCodes.Status400BadRequest;
-                return result;
-            }
-
-            var userRoles = await _userManager.GetRolesAsync(user);
-
-            var tokenOptions = new Shared.Models.TokenOptions()
-            {
-                ExpireMinutes = int.Parse(_configuration.GetSection("TokenOptions").GetSection("ExpireMinutes").Value),
-                IssuerSigningKey = _configuration.GetSection("TokenOptions").GetSection("IssuerSigningKey").Value,
-            };
-
-            var expires = DateTime.Now.AddMinutes(tokenOptions.ExpireMinutes);
-            result.Model = new LoginResponseModel
-            {
-                ExpiryDate = expires,
-                TokenType = "Bearer"
-            };
-
-            var claims = new List<ClaimNameValue>();
-            if (userRoles.Count() > 0)
-            {
-                claims.Add(
-                    new ClaimNameValue()
-                    {
-                        Key = "UserId",
-                        Value = user.Id
-                    });
-
-                foreach (var role in userRoles)
+                if (user == null)
                 {
-                    claims.Add(
+                    result.Status = StatusCodes.Status400BadRequest;
+                    result.StatusMessage = "არასწორი იმეილი ან პაროლი";
+                    return result;
+                }
+
+                var userRoles = await _userManager.GetRolesAsync(user);
+
+                var tokenOptions = new Shared.Models.TokenOptions()
+                {
+                    ExpireMinutes = int.Parse(_configuration.GetSection("TokenOptions").GetSection("ExpireMinutes").Value),
+                    IssuerSigningKey = _configuration.GetSection("TokenOptions").GetSection("IssuerSigningKey").Value,
+                };
+
+                var expires = DateTime.Now.AddMinutes(tokenOptions.ExpireMinutes);
+                result.Model = new LoginResponseModel
+                {
+                    ExpiryDate = expires,
+                    TokenType = "Bearer"
+                };
+
+                var claims = new List<ClaimNameValue>();
+                claims.Add(
                         new ClaimNameValue()
                         {
-                            Key = "UserRole",
-                            Value = role
+                            Key = "UserId",
+                            Value = user.Id
                         });
-                }
-            }
 
-            result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions, claims);
 
-            if (!string.IsNullOrEmpty(result.Model.Token))
-            {
-                var userTokens = _context.UserTokens.ToList();
-                if (!userTokens.Any(x => x.UserId == user.Id && x.Name == user.UserName))
+                if (userRoles.Count() > 0)
                 {
+                    
+                    foreach (var role in userRoles)
+                    {
+                        claims.Add(
+                            new ClaimNameValue()
+                            {
+                                Key = "UserRole",
+                                Value = role
+                            });
+                    }
+                }
 
-                    _context.UserTokens.Add(new IdentityUserToken<string>()
-                    {
-                        UserId = user.Id,
-                        Name = user.UserName,
-                        LoginProvider = "HireHaralo",
-                        Value = result.Model.Token
-                    });
-                    await _context.SaveChangesAsync();
-                }
-                else
+                result.Model.Token = JwtHelper.Create(null, expires, userRoles, tokenOptions, claims);
+
+                if (!string.IsNullOrEmpty(result.Model.Token))
                 {
-                    var userTokenRecord = userTokens.FirstOrDefault(x => x.UserId == user.Id && x.Name == user.UserName);
-                    _context.Remove(userTokenRecord);
-                    _context.UserTokens.Add(new IdentityUserToken<string>()
+                    var userTokens = _context.UserTokens.ToList();
+                    if (!userTokens.Any(x => x.UserId == user.Id && x.Name == user.UserName))
                     {
-                        UserId = user.Id,
-                        Name = user.UserName,
-                        LoginProvider = "HireHaralo",
-                        Value = result.Model.Token
-                    });
-                    _context.SaveChanges();
+
+                        _context.UserTokens.Add(new IdentityUserToken<string>()
+                        {
+                            UserId = user.Id,
+                            Name = user.UserName,
+                            LoginProvider = "HireHaralo",
+                            Value = result.Model.Token
+                        });
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        var userTokenRecord = userTokens.FirstOrDefault(x => x.UserId == user.Id && x.Name == user.UserName);
+                        _context.Remove(userTokenRecord);
+                        _context.UserTokens.Add(new IdentityUserToken<string>()
+                        {
+                            UserId = user.Id,
+                            Name = user.UserName,
+                            LoginProvider = "HireHaralo",
+                            Value = result.Model.Token
+                        });
+                        _context.SaveChanges();
+                    }
+                    result.Status = StatusCodes.Status200OK;
+                    return result;
                 }
+                result.Status = StatusCodes.Status400BadRequest;
+                result.StatusMessage = "არასწორი იმეილი ან პაროლი";
                 return result;
-            }
-            result.Status = StatusCodes.Status400BadRequest;
-            return result;
             }
             catch
             {
@@ -133,6 +136,9 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<bool>> Logout()
         {
+            try
+            {
+
             var userToken = GetUserToken();
 
             if (string.IsNullOrEmpty(userToken))
@@ -160,21 +166,30 @@ namespace Freelance.Services.Interfaces
                 Status = StatusCodes.Status200OK,
                 Model = true
             };
+            }
+            catch
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status500InternalServerError
+                };
+            }
         }
 
-        public async Task<ApiResponse<CheckAuthorityResponseModel>> CheckAuthority()
+        public async Task<ApiResponse<bool>> CheckAuthority()
         {
+            try
+            {
+
+            
             var userToken = GetUserToken();
 
             if (string.IsNullOrEmpty(userToken))
             {
-                return new ApiResponse<CheckAuthorityResponseModel>()
+                return new ApiResponse<bool>()
                 {
                     Status = StatusCodes.Status403Forbidden,
-                    Model = new CheckAuthorityResponseModel()
-                    {
-                        IsAuthorized = false,
-                    }
+                    Model = false
                 };
             }
             else
@@ -183,13 +198,10 @@ namespace Freelance.Services.Interfaces
 
                 if (tokenRecord == null)
                 {
-                    return new ApiResponse<CheckAuthorityResponseModel>()
+                    return new ApiResponse<bool>()
                     {
                         Status = StatusCodes.Status403Forbidden,
-                        Model = new CheckAuthorityResponseModel()
-                        {
-                            IsAuthorized = false,
-                        }
+                        Model = false
                     };
                 }
 
@@ -197,38 +209,38 @@ namespace Freelance.Services.Interfaces
 
                 if (!userTokenValidity.IsValid)
                 {
-                    return new ApiResponse<CheckAuthorityResponseModel>()
+                    return new ApiResponse<bool>()
                     {
                         Status = StatusCodes.Status403Forbidden,
-                        Model = new CheckAuthorityResponseModel()
-                        {
-                            IsAuthorized = false,
-                        }
+                        Model = false
                     };
                 }
                 if (userTokenValidity.IsValid && userTokenValidity.ValidTo > DateTime.Now)
                 {
                     var userId = GetUserId();
                     var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
-                    return new ApiResponse<CheckAuthorityResponseModel>()
+                    return new ApiResponse<bool>()
                     {
                         Status = StatusCodes.Status200OK,
-                        Model = new CheckAuthorityResponseModel()
-                        {
-                            IsAuthorized = true,
-                            Username = user.UserName
-                        }
+                        Model = true
                     };
                 }
             }
-            return new ApiResponse<CheckAuthorityResponseModel>()
+            return new ApiResponse<bool>()
             {
                 Status = StatusCodes.Status403Forbidden,
-                Model = new CheckAuthorityResponseModel()
-                {
-                    IsAuthorized = false,
-                }
+                Model = false
             };
+
+            }
+            catch
+            {
+                return new ApiResponse<bool>()
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Model = false,
+                };
+            }
         }
 
         public string GetUserId()
@@ -240,9 +252,9 @@ namespace Freelance.Services.Interfaces
 
             var tokenClaims = jwtUserToken.Claims.ToList();
 
-            if (tokenClaims.Any(x => x.Value == "UserId"))
+            if (tokenClaims.Any(x => x.Type == "UserId"))
             {
-                return tokenClaims.FirstOrDefault(x => x.Value == "UserId").ToString();
+                return tokenClaims.FirstOrDefault(x => x.Type == "UserId").Value.ToString();
             }
             return null;
         }

@@ -30,47 +30,83 @@ namespace Freelance.Services.Services
 
         public async Task<ApiResponse<PaginationResponseModel<EmployerProfileViewModel>>> GetAll(EmployerProfileModel model)
         {
-            var employerProfileList = await _context.EmployerProfiles.Where(x => (string.IsNullOrEmpty(model.UserId) || x.UserId == model.UserId) &&
-                                                         (model.Rating == 0 || x.Rating == model.Rating) &&
-                                                         (string.IsNullOrEmpty(model.Name) || x.Name.Contains(model.Name))).ToListAsync();
+            try
+            {
 
-            if (employerProfileList.Count() <= 0)
+
+                var employerProfileList = await _context.EmployerProfiles.Where(x => (string.IsNullOrEmpty(model.UserId) || x.UserId == model.UserId) &&
+                                                             (model.Rating == 0 || x.Rating == model.Rating) &&
+                                                             (string.IsNullOrEmpty(model.Name) || x.Name.Contains(model.Name))).ToListAsync();
+
+                if (employerProfileList.Count() <= 0)
+                {
+                    return new ApiResponse<PaginationResponseModel<EmployerProfileViewModel>>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "ჩანაწერები არ მოიძებნა"
+                    };
+                }
+
+                var employerProfileModelList = _mapper.Map<List<EmployerProfileViewModel>>(employerProfileList);
+                var paginationViewModel = new PaginationResponseModel<EmployerProfileViewModel>(_context.EmployerProfiles.Count(), employerProfileModelList);
+
+                return new ApiResponse<PaginationResponseModel<EmployerProfileViewModel>>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = paginationViewModel
+                };
+            }
+            catch
             {
                 return new ApiResponse<PaginationResponseModel<EmployerProfileViewModel>>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "ჩანაწერები არ მოიძებნა"
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
-
-            var employerProfileModelList = _mapper.Map<List<EmployerProfileViewModel>>(employerProfileList);
-            var paginationViewModel = new PaginationResponseModel<EmployerProfileViewModel>(_context.EmployerProfiles.Count(), employerProfileModelList);
-
-            return new ApiResponse<PaginationResponseModel<EmployerProfileViewModel>>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = paginationViewModel
-            };
         }
 
         public async Task<ApiResponse<EmployerProfileViewModel>> Get(int id)
         {
-            var employerProfile = await _context.EmployerProfiles.FirstOrDefaultAsync(x => x.Id == id);
+            try
+            {
 
-            if (employerProfile == null)
+                var userId = _authorizationService.GetUserId();
+
+                var employerProfile = id <= 0 ? await _context.EmployerProfiles.FirstOrDefaultAsync(x => x.UserId == userId) : await _context.EmployerProfiles.FirstOrDefaultAsync(x => x.Id == id);
+
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == employerProfile.UserId);
+
+                if (employerProfile == null)
+                {
+                    return new ApiResponse<EmployerProfileViewModel>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Model = null
+                    };
+                }
+
+                return new ApiResponse<EmployerProfileViewModel>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = new EmployerProfileViewModel()
+                    {
+                        Id = employerProfile.Id,
+                        Name = employerProfile.Name,
+                        Rating = employerProfile.Rating,
+                        Address = employerProfile.Address,
+                        Description = employerProfile.Description,
+                        PhoneNumber = user.PhoneNumber,
+                        Email = user.Email
+                    }
+                };
+            }
+            catch
             {
                 return new ApiResponse<EmployerProfileViewModel>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    Model = null
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
-
-            return new ApiResponse<EmployerProfileViewModel>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = _mapper.Map<EmployerProfileViewModel>(employerProfile)
-            };
         }
 
         public async Task<ApiResponse<int>> Create(EmployerProfileModel model)
@@ -84,8 +120,17 @@ namespace Freelance.Services.Services
                     StatusMessage = "მომხმარებელს უკვე დამატებული აქვს პროფილის ინფორმაცია"
                 };
             }
-            var newEmployerProfile = _mapper.Map<EmployerProfile>(model);
-            newEmployerProfile.ModifierId = _authorizationService.GetUserId();
+            //var newEmployerProfile = _mapper.Map<EmployerProfile>(model);
+            //newEmployerProfile.ModifierId = _authorizationService.GetUserId();
+            var newEmployerProfile = new EmployerProfile()
+            {
+                Name = model.Name,
+                Rating = model.Rating,
+                Description = model.Description,
+                Address = model.Address,
+                UserId = model.UserId,
+            };
+
             _context.EmployerProfiles.Add(newEmployerProfile);
             await _context.SaveChangesAsync();
 

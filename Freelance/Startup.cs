@@ -1,4 +1,7 @@
 using AutoMapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Freelance.Api.Models.Request;
 using Freelance.Api.Profiles;
 using Freelance.Domain.Context;
 using Freelance.Domain.Entities;
@@ -33,9 +36,6 @@ namespace Freelance.Api
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-
-
-
             services.AddLocalization(options =>
             {
                 options.ResourcesPath = "Resources";
@@ -55,9 +55,9 @@ namespace Freelance.Api
             });
             //mapperConfig.AssertConfigurationIsValid();
             services.AddCors();
-            services.AddMvc();
+            services.AddMvc().AddFluentValidation();
             services.AddOptions();
-
+            
             services.AddOptions<TokenOptions>().Bind(_configuration.GetSection("TokenOptions"));
 
             IMapper mapper = mapperConfig.CreateMapper();
@@ -73,9 +73,11 @@ namespace Freelance.Api
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IPasswordValidatorService, PasswordValidatorService>();
             services.AddTransient<IPasswordResetService, PasswordResetService>();
+            services.AddTransient<IEmployerService, EmployerService>();
             services.AddTransient<UserManager<User>>();
             services.AddTransient<ISwaggerProvider, SwaggerGenerator>();
             services.AddTransient<ISchemaGenerator, SchemaGenerator>();
+            services.AddTransient<IValidator<LoginRequest>, LoginRequestValidator>();
 
             services.Configure<PasswordHasherOptions>(options =>
     options.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV2
@@ -137,7 +139,7 @@ namespace Freelance.Api
             })
             .AddEntityFrameworkStores<ApplicationContext>()
             .AddDefaultTokenProviders();
-
+            
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

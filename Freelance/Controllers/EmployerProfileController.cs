@@ -33,10 +33,10 @@ namespace Freelance.Api.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<ApiResponse<int>> Create([FromBody] CreateEmployerProfileRequestModel model)
+        public async Task<ApiResponse<int>> Create([FromBody] EmployerProfileModel model)
         {
-            var mappedResult = _mapper.Map<EmployerProfileModel>(model);
-            return await _employerProfileService.Create(mappedResult);
+            //var mappedResult = _mapper.Map<EmployerProfileModel>(model);
+            return await _employerProfileService.Create(model);
         }
 
         [HttpPost]

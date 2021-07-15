@@ -11,5 +11,10 @@ namespace Freelance.Services.Models.Request
         public string Id { get; set; }
         public string Name { get; set; }
         public EntityStatus Status { get; set; }
+
+        public RoleModel(string name)
+        {
+            Name = name;
+        }
     }
 }

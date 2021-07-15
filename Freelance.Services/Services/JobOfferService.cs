@@ -30,102 +30,135 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<PaginationResponseModel<JobOfferViewModel>>> GetAll(JobOfferModel model)
         {
-            //var categoryId = model.Categories.Select(x => x.Id).ToList();
-            var jobOfferList = await _context.JobOffers.Where(x => (string.IsNullOrEmpty(model.Name) || x.Name == model.Name) &&
-                                                         (model.JobStatus == 0 || x.JobStatus == model.JobStatus)).ToListAsync();
-                                                         //&&
-                                                         //(model.Categories.Count == 0 || x.JobCategories.Any(y => categoryId.Contains(y.Category.Id)))).ToListAsync();
+            try
+            {
 
-            if (jobOfferList.Count() <= 0)
+
+                //var categoryId = model.Categories.Select(x => x.Id).ToList();
+                var jobOfferList = await _context.JobOffers.Where(x => (string.IsNullOrEmpty(model.Name) || x.Name == model.Name) &&
+                                                             (model.JobStatus == 0 || x.JobStatus == model.JobStatus)).ToListAsync();
+                //&&
+                //(model.Categories.Count == 0 || x.JobCategories.Any(y => categoryId.Contains(y.Category.Id)))).ToListAsync();
+
+                if (jobOfferList.Count() <= 0)
+                {
+                    return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "ჩანაწერები არ მოიძებნა"
+                    };
+                }
+
+                var jobOfferModelList = jobOfferList.Select(x => new JobOfferViewModel()
+                {
+                    Id = x.Id,
+                    CreateDate = x.CreateDate,
+                    JobStatus = x.JobStatus,
+                    Description = x.Description,
+                    Name = x.Name,
+                }).ToList();
+                var paginationViewModel = new PaginationResponseModel<JobOfferViewModel>(_context.JobOffers.Count(), jobOfferModelList);
+
+                return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = paginationViewModel
+                };
+            }
+            catch
             {
                 return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "ჩანაწერები არ მოიძებნა"
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
-
-            var jobOfferModelList = jobOfferList.Select(x => new JobOfferViewModel()
-            {
-                Id = x.Id,
-                CreateDate = x.CreateDate,
-                JobStatus = x.JobStatus,
-                Description = x.Description,
-                Name = x.Name,
-            }).ToList();
-            var paginationViewModel = new PaginationResponseModel<JobOfferViewModel>(_context.JobOffers.Count(), jobOfferModelList);
-
-            return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = paginationViewModel
-            };
         }
 
         public async Task<ApiResponse<JobOfferViewModel>> Get(int id)
         {
-            var jobOffer = await _context.JobOffers.FirstOrDefaultAsync(x => x.Id == id);
+            try
+            {
+                var jobOffer = await _context.JobOffers.FirstOrDefaultAsync(x => x.Id == id);
 
-            if (jobOffer == null)
+                if (jobOffer == null)
+                {
+                    return new ApiResponse<JobOfferViewModel>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Model = null
+                    };
+                }
+
+                return new ApiResponse<JobOfferViewModel>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = _mapper.Map<JobOfferViewModel>(jobOffer)
+                };
+            }
+            catch
             {
                 return new ApiResponse<JobOfferViewModel>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    Model = null
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
-
-            return new ApiResponse<JobOfferViewModel>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = _mapper.Map<JobOfferViewModel>(jobOffer)
-            };
         }
 
         public async Task<ApiResponse<int>> Create(JobOfferModel model)
         {
-            var jobOffers = await _context.JobOffers.ToListAsync();
-            if (jobOffers.Any(x => x.Name == model.Name && x.EmployerId == model.EmployerId))
+            try
+            {
+                var jobOffers = await _context.JobOffers.ToListAsync();
+                if (jobOffers.Any(x => x.Name == model.Name && x.EmployerId == model.EmployerId))
+                {
+                    return new ApiResponse<int>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს უკვე არსებობს"
+                    };
+                }
+
+                var employer = _context.EmployerProfiles.FirstOrDefault(x => x.Id == model.EmployerId);
+                if (employer == null)
+                {
+                    return new ApiResponse<int>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "დმსაქმებლის პროფილი არ მოიძებნა"
+                    };
+                }
+
+                var newJobOffer = _mapper.Map<JobOffer>(model);
+
+                var authorizedUser = _authorizationService.GetUserId();
+                newJobOffer.ModifierId = authorizedUser;
+
+                await _context.JobOffers.AddAsync(newJobOffer);
+                _context.SaveChanges();
+
+                var newJobOfferCategories = model.Categories.Select(x => new JobCategory()
+                {
+                    CategoryId = x.Id,
+                    JobOfferId = newJobOffer.Id,
+                }).ToList();
+
+                await _context.JobCategories.AddRangeAsync(newJobOfferCategories);
+                _context.SaveChanges();
+
+                return new ApiResponse<int>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = newJobOffer.Id
+                };
+            }
+            catch
             {
                 return new ApiResponse<int>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს უკვე არსებობს"
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
 
-            var employer = _context.EmployerProfiles.FirstOrDefault(x => x.Id == model.EmployerId);
-            if (employer == null)
-            {
-                return new ApiResponse<int>()
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "დმსაქმებლის პროფილი არ მოიძებნა"
-                };
-            }
-
-            var newJobOffer = _mapper.Map<JobOffer>(model);
-
-            var authorizedUser = _authorizationService.GetUserId();
-            newJobOffer.ModifierId = authorizedUser;
-
-            await _context.JobOffers.AddAsync(newJobOffer);
-            _context.SaveChanges();
-
-            var newJobOfferCategories = model.Categories.Select(x => new JobCategory()
-            {
-                CategoryId = x.Id,
-                JobOfferId = newJobOffer.Id,
-            }).ToList();
-
-            await _context.JobCategories.AddRangeAsync(newJobOfferCategories);
-            _context.SaveChanges();
-
-            return new ApiResponse<int>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = newJobOffer.Id
-            };
         }
 
         public async Task<ApiResponse<int>> Update(JobOfferModel model)

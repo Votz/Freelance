@@ -7,6 +7,8 @@ namespace Freelance.Domain.Entities
 {
     public class User : IdentityUser
     {
+        public string Firstname { get; set; }
+        public string Lastname { get; set; }
         public UserProfile UserProfile { get; set; }
         public EmployerProfile EmployerProfile { get; set; }
     }

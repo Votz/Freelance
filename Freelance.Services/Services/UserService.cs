@@ -22,7 +22,7 @@ namespace Freelance.Services.Interfaces
         private readonly IAuthorizationService _authorizationService;
 
 
-        public UserService(IAuthorizationService authorizationService,UserManager<User> userManager, IPasswordValidatorService validator, ApplicationContext context)
+        public UserService(IAuthorizationService authorizationService, UserManager<User> userManager, IPasswordValidatorService validator, ApplicationContext context)
         {
             _userManager = userManager;
             _context = context;
@@ -32,52 +32,65 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<string>> Create(CreateuserModel model)
         {
-            if (_context.Users.Any(x => x.Email == model.Email && x.UserName == model.UserName))
+            try
             {
-                return new ApiResponse<string>()
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "მომხმარებელი მსგავსი იმეილით ან იუზერნეიმით უკვე არსებობს"
-                };
-            }
 
-            var passwordValidationErrors = _validator.Validate(model.Password);
-
-            if (passwordValidationErrors.Count() <= 0)
-            {
-                var user = new User()
-                {
-                    UserName = model.UserName,
-                    Email = model.Email,
-                    PhoneNumber = model.PhoneNumber
-                };
-
-                var createdResult = await _userManager.CreateAsync(user, model.ConfirmPassword);
-
-                if (createdResult.Succeeded)
+                if (_context.Users.Any(x => x.Email == model.Email && x.UserName == model.UserName))
                 {
                     return new ApiResponse<string>()
                     {
-                        Status = StatusCodes.Status200OK,
-                        Model = user.Id
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "მომხმარებელი მსგავსი იმეილით ან იუზერნეიმით უკვე არსებობს"
                     };
                 }
-                return new ApiResponse<string>()
+
+                var passwordValidationErrors = _validator.Validate(model.Password);
+
+                if (passwordValidationErrors.Count() <= 0)
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "მომხმარებელი ვერ შეიქმნა"
-                };
+                    var user = new User()
+                    {
+                        UserName = model.UserName,
+                        Email = model.Email,
+                        PhoneNumber = model.PhoneNumber
+                    };
+
+                    var createdResult = await _userManager.CreateAsync(user, model.ConfirmPassword);
+
+                    if (createdResult.Succeeded)
+                    {
+                        if(model.UserType != 0)
+                        {
+                            var roleId = model.UserType == Shared.Enumerations.UserType.Employee ? _context.Roles.FirstOrDefault(x => x.Name == "employee").Id : _context.Roles.FirstOrDefault(x => x.Name == "employer").Id;
+                            var addUserRole = await this.AddUserRole(new AddUserInRoleModel() { RoleId = roleId, UserId = user.Id });
+                        }
+                        return new ApiResponse<string>()
+                        {
+                            Status = StatusCodes.Status200OK,
+                            Model = user.Id
+                        };
+                    }
+                    return new ApiResponse<string>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = createdResult.Errors.FirstOrDefault().Description
+                    };
+                }
+                else
+                {
+                    return new ApiResponse<string>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "არავალიდური პაროლი"
+                    };
+                }
             }
-            else
+            catch (Exception ex)
             {
                 return new ApiResponse<string>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    Model = "არავალიდური პაროლი",
-                    Errors = new ApiError()
-                    {
-                        ErrorMessages = passwordValidationErrors
-                    }
+                    Status = StatusCodes.Status500InternalServerError,
+                    StatusMessage = "მომხმარებელი ვერ შეიქმნა,გთხოვთ სცადოთ მოგვიანებით"
                 };
             }
 

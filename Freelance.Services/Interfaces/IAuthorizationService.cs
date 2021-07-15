@@ -12,7 +12,7 @@ namespace Freelance.Services.Interfaces
     {
         Task<ApiResponse<LoginResponseModel>> LogIn(LoginRequestModel model);
         Task<ApiResponse<bool>> Logout();
-        Task<ApiResponse<CheckAuthorityResponseModel>> CheckAuthority();
+        Task<ApiResponse<bool>> CheckAuthority();
         string GetUserId();
         string GetUserToken();
         GetUserTokenValidityModel GetUserTokenValidity();

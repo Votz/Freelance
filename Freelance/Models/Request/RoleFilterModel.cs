@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Freelance.Api.Models.Request
 {
-    public class RoleFilterModel : PaginationModel
+    public class RoleFilterModel
     {
         public string Id { get; set; }
         public string Name { get; set; }

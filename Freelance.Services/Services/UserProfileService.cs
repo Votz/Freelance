@@ -54,22 +54,32 @@ namespace Freelance.Services.Interfaces
 
         public async Task<ApiResponse<UserProfileViewModel>> Get(int id)
         {
-            var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.Id == id);
+            try
+            {
+                var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.Id == id);
 
-            if (userProfile == null)
+                if (userProfile == null)
+                {
+                    return new ApiResponse<UserProfileViewModel>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Model = null
+                    };
+                }
+
+                return new ApiResponse<UserProfileViewModel>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = _mapper.Map<UserProfileViewModel>(userProfile)
+                };
+            }
+            catch
             {
                 return new ApiResponse<UserProfileViewModel>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    Model = null
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
-
-            return new ApiResponse<UserProfileViewModel>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = _mapper.Map<UserProfileViewModel>(userProfile)
-            };
         }
 
         public async Task<ApiResponse<int>> Create(UserProfileModel model)

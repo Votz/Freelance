@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Freelance.Shared.Enumerations;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,5 +16,6 @@ namespace Freelance.Services.Models.Request
 
         public string Password { get; set; }
         public string ConfirmPassword { get; set; }
+        public UserType UserType { get; set; }
     }
 }
