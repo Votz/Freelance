@@ -158,7 +158,7 @@ namespace Freelance.Services.Interfaces
                     JobOfferId = newJobOffer.Id,
                 }).ToList();
 
-                if (newJobOfferCategories.Count() > 0)
+                if (newJobOfferCategories != null && newJobOfferCategories.Count() > 0)
                 {
 
                     await _context.JobCategories.AddRangeAsync(newJobOfferCategories);

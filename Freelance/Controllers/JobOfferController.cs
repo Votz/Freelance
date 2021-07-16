@@ -36,8 +36,13 @@ namespace Freelance.Api.Controllers
         [HttpPost("[action]")]
         public async Task<ApiResponse<int>> Create([FromBody] CreateJobOfferRequestModel model)
         {
-            var mappedResult = _mapper.Map<JobOfferModel>(model);
-            return await _jobOfferService.Create(mappedResult);
+            return await _jobOfferService.Create(new JobOfferModel() 
+            {
+                Name = model.Name,
+                Description = model.Description,
+                Salary = model.Salary,
+                Categories = model.Categories.Count() >0 ? model.Categories.Select(x => new CategoryModel() {Id = x.Id }).ToList() : null
+            });
         }
 
         [HttpPost]
