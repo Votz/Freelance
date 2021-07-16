@@ -1,9 +1,4 @@
-﻿using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Freelance.Services.Models.Request
+﻿namespace Freelance.Services.Models.Request
 {
     public class LoginRequestModel
     {

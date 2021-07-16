@@ -27,10 +27,10 @@ namespace Freelance.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<ApiResponse<PaginationResponseModel<JobOfferViewModel>>> GetAll()
+        public async Task<ApiResponse<List<JobOfferViewModel>>> GetAll()
         {
             //var mappedResult = _mapper.Map<JobOfferModel>(model);
-            return await _jobOfferService.GetAll(new JobOfferModel());
+            return await _jobOfferService.GetAll();
         }
 
         [HttpPost("[action]")]

@@ -11,7 +11,7 @@ namespace Freelance.Services.Interfaces
 {
     public interface IJobOfferService
     {
-        Task<ApiResponse<PaginationResponseModel<JobOfferViewModel>>> GetAll(JobOfferModel model);
+        Task<ApiResponse<List<JobOfferViewModel>>> GetAll();
         Task<ApiResponse<JobOfferViewModel>> Get(int id);
         Task<ApiResponse<int>> Create(JobOfferModel model);
         Task<ApiResponse<int>> Update(JobOfferModel model);

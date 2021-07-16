@@ -28,17 +28,15 @@ namespace Freelance.Api.Controllers
 
 
         [HttpGet("[action]")]
-        public async Task<ApiResponse<PaginationResponseModel<CategoryViewModel>>> GetAll([FromQuery] CategoryFilterRequestModel model)
+        public async Task<ApiResponse<List<CategoryViewModel>>> GetAll()
         {
-            var mappedResult = _mapper.Map<CategoryModel>(model);
-            return await _categoryService.GetAll(mappedResult);
+            return await _categoryService.GetAll();
         }
 
         [HttpPost("[action]")]
         public async Task<ApiResponse<int>> Create([FromBody] CreateCategoryRequestModel model)
         {
-            var mappedResult = _mapper.Map<CategoryModel>(model);
-            return await _categoryService.Create(mappedResult);
+            return await _categoryService.Create(new CategoryModel() { Name = model.Name });
         }
 
         [HttpPost]

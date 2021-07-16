@@ -28,21 +28,21 @@ namespace Freelance.Services.Interfaces
             _authorizationService = authorizationService;
         }
 
-        public async Task<ApiResponse<PaginationResponseModel<JobOfferViewModel>>> GetAll(JobOfferModel model)
+        public async Task<ApiResponse<List<JobOfferViewModel>>> GetAll()
         {
             try
             {
-
-
                 //var categoryId = model.Categories.Select(x => x.Id).ToList();
-                var jobOfferList = await _context.JobOffers.Where(x => (string.IsNullOrEmpty(model.Name) || x.Name == model.Name) &&
-                                                             (model.JobStatus == 0 || x.JobStatus == model.JobStatus)).ToListAsync();
+                var jobOfferList = await _context.JobOffers.Include(x => x.JobCategories).ThenInclude(y => y.Category).ToListAsync();
+
+                //Where(x => (string.IsNullOrEmpty(model.Name) || x.Name == model.Name) &&
+                //                                             (model.JobStatus == 0 || x.JobStatus == model.JobStatus))
                 //&&
                 //(model.Categories.Count == 0 || x.JobCategories.Any(y => categoryId.Contains(y.Category.Id)))).ToListAsync();
 
                 if (jobOfferList.Count() <= 0)
                 {
-                    return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
+                    return new ApiResponse<List<JobOfferViewModel>>()
                     {
                         Status = StatusCodes.Status400BadRequest,
                         StatusMessage = "ჩანაწერები არ მოიძებნა"
@@ -56,18 +56,26 @@ namespace Freelance.Services.Interfaces
                     JobStatus = x.JobStatus,
                     Description = x.Description,
                     Name = x.Name,
+                    HourRate = x.HourRate,
+                    Salary = x.Salary,
+                    WorkDuration = x.WorkDuration,
+                    Categories = x.JobCategories == null ? null :
+                        x.JobCategories.Select(y => new CategoryModel()
+                        {
+                            Id = y.CategoryId,
+                            Name = y.Category.Name
+                        }).ToList()
                 }).ToList();
-                var paginationViewModel = new PaginationResponseModel<JobOfferViewModel>(_context.JobOffers.Count(), jobOfferModelList);
 
-                return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
+                return new ApiResponse<List<JobOfferViewModel>>()
                 {
                     Status = StatusCodes.Status200OK,
-                    Model = paginationViewModel
+                    Model = jobOfferModelList
                 };
             }
-            catch
+            catch (Exception ex)
             {
-                return new ApiResponse<PaginationResponseModel<JobOfferViewModel>>()
+                return new ApiResponse<List<JobOfferViewModel>>()
                 {
                     Status = StatusCodes.Status500InternalServerError
                 };
@@ -117,8 +125,8 @@ namespace Freelance.Services.Interfaces
                         StatusMessage = "ასეთი შეთავაზება მომხმარებელს უკვე გაკეთებული აქვს უკვე არსებობს"
                     };
                 }
-
-                var employer = _context.EmployerProfiles.FirstOrDefault(x => x.Id == model.EmployerId);
+                var authorizedUser = _authorizationService.GetUserId();
+                var employer = _context.EmployerProfiles.FirstOrDefault(x => x.UserId == authorizedUser);
                 if (employer == null)
                 {
                     return new ApiResponse<int>()
@@ -128,22 +136,34 @@ namespace Freelance.Services.Interfaces
                     };
                 }
 
-                var newJobOffer = _mapper.Map<JobOffer>(model);
+                var newJobOffer = new JobOffer() 
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    JobStatus = JobStatus.Active,
+                    WorkDuration = model.WorkDuration,
+                    Salary = model.Salary,
+                    HourRate = model.HourRate,
+                    EmployerId = employer.Id,
+                };
 
-                var authorizedUser = _authorizationService.GetUserId();
                 newJobOffer.ModifierId = authorizedUser;
 
                 await _context.JobOffers.AddAsync(newJobOffer);
                 _context.SaveChanges();
 
-                var newJobOfferCategories = model.Categories.Select(x => new JobCategory()
+                var newJobOfferCategories = model.Categories == null ? null : model.Categories.Select(x => new JobCategory()
                 {
                     CategoryId = x.Id,
                     JobOfferId = newJobOffer.Id,
                 }).ToList();
 
-                await _context.JobCategories.AddRangeAsync(newJobOfferCategories);
-                _context.SaveChanges();
+                if (newJobOfferCategories.Count() > 0)
+                {
+
+                    await _context.JobCategories.AddRangeAsync(newJobOfferCategories);
+                    _context.SaveChanges();
+                }
 
                 return new ApiResponse<int>()
                 {

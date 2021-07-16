@@ -22,34 +22,39 @@ namespace Freelance.Services.Interfaces
         private readonly IAuthorizationService _authorizationService;
 
 
-        public CategoryService(ApplicationContext context,IMapper mapper, IAuthorizationService authorizationService)
+        public CategoryService(ApplicationContext context, IMapper mapper, IAuthorizationService authorizationService)
         {
             _mapper = mapper;
             _context = context;
             _authorizationService = authorizationService;
         }
-        
-        public async Task<ApiResponse<PaginationResponseModel<CategoryViewModel>>> GetAll(CategoryModel model)
+
+        public async Task<ApiResponse<List<CategoryViewModel>>> GetAll()
         {
             var categoryList = await _context.Categories.ToListAsync();
 
-            var categoryViewModelList = _mapper.Map<List<CategoryViewModel>>(categoryList);
+            //= _mapper.Map<List<CategoryViewModel>>(categoryList);
+            var categoryViewModelList = categoryList.Select(x => new CategoryViewModel()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Status = x.Status,
+            }).ToList();
+
 
             if (categoryViewModelList.Count() <= 0)
             {
-                return new ApiResponse<PaginationResponseModel<CategoryViewModel>>()
+                return new ApiResponse<List<CategoryViewModel>>()
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Model = null
                 };
             }
 
-            var paginationViewModel = new PaginationResponseModel<CategoryViewModel>(_context.JobOffers.Count(), categoryViewModelList);
-
-            return new ApiResponse<PaginationResponseModel<CategoryViewModel>>()
+            return new ApiResponse<List<CategoryViewModel>>()
             {
                 Status = StatusCodes.Status200OK,
-                Model = paginationViewModel
+                Model = categoryViewModelList
             };
         }
 
@@ -69,31 +74,43 @@ namespace Freelance.Services.Interfaces
             return new ApiResponse<CategoryViewModel>()
             {
                 Status = StatusCodes.Status200OK,
-                Model = _mapper.Map<CategoryViewModel>(category)
+                Model = new CategoryViewModel() {Id = category.Id, Name = category.Name, Status = category.Status }
             };
         }
 
         public async Task<ApiResponse<int>> Create(CategoryModel model)
         {
-            if (_context.Categories.Any(x => x.Name == model.Name))
+            try
+            {
+                if (_context.Categories.Any(x => x.Name == model.Name))
+                {
+                    return new ApiResponse<int>()
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        StatusMessage = "ასეთი კატეგორია უკვე არსებობს"
+                    };
+                }
+
+                var newCategory = new Category()
+                {
+                    Name = model.Name
+                };
+                await _context.Categories.AddAsync(newCategory);
+                await _context.SaveChangesAsync();
+
+                return new ApiResponse<int>()
+                {
+                    Status = StatusCodes.Status200OK,
+                    Model = newCategory.Id
+                };
+            }
+            catch
             {
                 return new ApiResponse<int>()
                 {
-                    Status = StatusCodes.Status400BadRequest,
-                    StatusMessage = "ასეთი კატეგორია უკვე არსებობს"
+                    Status = StatusCodes.Status500InternalServerError
                 };
             }
-
-            var newCategory = _mapper.Map<Category>(model);
-            newCategory.ModifierId = _authorizationService.GetUserId();
-            await _context.Categories.AddAsync(newCategory);
-            await _context.SaveChangesAsync();
-
-            return new ApiResponse<int>()
-            {
-                Status = StatusCodes.Status200OK,
-                Model = newCategory.Id
-            };
         }
 
         public async Task<ApiResponse> Delete(int id)

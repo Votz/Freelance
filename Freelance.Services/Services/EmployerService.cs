@@ -96,7 +96,9 @@ namespace Freelance.Services.Services
                         Address = employerProfile.Address,
                         Description = employerProfile.Description,
                         PhoneNumber = user.PhoneNumber,
-                        Email = user.Email
+                        Email = user.Email,
+                        Firstname = user.Firstname,
+                        Lastname = user.Lastname
                     }
                 };
             }

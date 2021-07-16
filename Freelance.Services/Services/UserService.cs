@@ -52,7 +52,9 @@ namespace Freelance.Services.Interfaces
                     {
                         UserName = model.UserName,
                         Email = model.Email,
-                        PhoneNumber = model.PhoneNumber
+                        PhoneNumber = model.PhoneNumber,
+                        Firstname = model.Firstname,
+                        Lastname = model.Lastname
                     };
 
                     var createdResult = await _userManager.CreateAsync(user, model.ConfirmPassword);

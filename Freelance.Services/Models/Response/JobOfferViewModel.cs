@@ -12,6 +12,9 @@ namespace Freelance.Services.Models.Response
         public DateTime CreateDate { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public double WorkDuration { get; set; }
+        public int Salary { get; set; }
+        public int HourRate { get; set; }
         public JobStatus JobStatus { get; set; }
         public List<CategoryModel> Categories { get; set; }
     }

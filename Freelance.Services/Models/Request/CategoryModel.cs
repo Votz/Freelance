@@ -6,10 +6,11 @@ using System.Text;
 
 namespace Freelance.Services.Models.Request
 {
-    public class CategoryModel : PaginationModel
+    public class CategoryModel
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public EntityStatus Status { get; set; }
+
     }
 }
