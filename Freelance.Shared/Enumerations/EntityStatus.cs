@@ -8,6 +8,7 @@ namespace Freelance.Shared.Enumerations
     {
         Active = 1,
         Inactive = 2,
-        Deleted = 3
+        Deleted = 3,
+        Removed = 4,
     }
 }
