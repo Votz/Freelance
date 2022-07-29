@@ -10,6 +10,7 @@ namespace Freelance.Shared.Enumerations
         Delayed = 2,
         InProgress = 3,
         Rejected = 4,
-        Closed = 5
+        Closed = 5,
+        Rame = 6,
     }
 }
